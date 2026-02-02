@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>随手记 Cloud Desktop (云端版)</title>
+    <title>随手记 Cloud Pro (双模版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,7 +24,6 @@
                     boxShadow: {
                         'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.05)',
                         'card': '0 2px 20px rgba(0, 0, 0, 0.02), 0 10px 40px rgba(0, 0, 0, 0.04)',
-                        'float': '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
                     },
                     animation: {
                         'blob': 'blob 7s infinite',
@@ -46,7 +45,7 @@
             }
         }
 
-        // --- SUPABASE 配置 (来自你上传的文件) ---
+        // --- SUPABASE 配置 ---
         const SUPABASE_URL = 'https://kkouqqbpturjuyhchfyc.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtrb3VxcWJwdHVyanV5aGNoZnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5OTg5OTAsImV4cCI6MjA4NTU3NDk5MH0.BHm41jsY_uBxryBBJnnXbpH7Axbv0LTWIx1QhRwo7N0';
         
@@ -55,7 +54,6 @@
         function initSupabase() {
             if (window.supabase) {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log("Supabase 初始化成功");
             }
         }
     </script>
@@ -90,7 +88,6 @@
             box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
         }
         .hidden-view { display: none !important; }
-        .chart-wrapper { position: relative; height: 100%; width: 100%; }
     </style>
 </head>
 <body class="font-sans selection:bg-teal-100 selection:text-teal-900">
@@ -100,7 +97,7 @@
         <div class="absolute top-0 -left-4 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
         <div class="absolute top-0 -right-4 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
         
-        <div class="glass-panel w-full max-w-md p-8 rounded-3xl shadow-float relative animate-fade-in mx-4">
+        <div class="glass-panel w-full max-w-md p-8 rounded-3xl shadow-xl relative animate-fade-in mx-4">
             <div class="text-center mb-8">
                 <div class="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mx-auto mb-4">
                     <i class="fa-solid fa-cloud"></i>
@@ -109,7 +106,7 @@
                 <p class="text-stone-500 text-sm mt-1">桌面云端同步版</p>
             </div>
 
-            <form id="login-form" class="space-y-5">
+            <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1 ml-1">邮箱</label>
                     <input type="email" id="login-email" class="modern-input w-full px-4 py-3 rounded-xl font-medium text-stone-700" placeholder="name@example.com">
@@ -123,6 +120,16 @@
                     登录 / 自动注册
                 </button>
             </form>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300"></div></div>
+                <div class="relative flex justify-center text-sm"><span class="px-2 bg-white/50 text-gray-500 bg-opacity-50">或</span></div>
+            </div>
+
+            <button onclick="Auth.loginAsGuest()" class="w-full bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 py-3 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user-secret"></i> 游客直接试用 (离线模式)
+            </button>
+
             <p id="login-msg" class="text-center text-xs text-red-500 mt-4 min-h-[1rem]"></p>
         </div>
     </div>
@@ -152,13 +159,13 @@
 
             <div class="p-4 border-t border-stone-100">
                 <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-stone-50 border border-stone-100 mb-2">
-                    <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs" id="user-avatar">U</div>
+                    <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs" id="user-avatar">G</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-stone-800 truncate" id="user-email">Loading...</p>
-                        <p class="text-[10px] text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 已连接云端</p>
+                        <p class="text-sm font-medium text-stone-800 truncate" id="user-email">Guest</p>
+                        <p class="text-[10px] flex items-center gap-1" id="user-status"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> 离线模式</p>
                     </div>
                 </div>
-                <button onclick="Auth.logout()" class="w-full text-xs text-stone-400 hover:text-red-500 py-2 transition">退出登录</button>
+                <button onclick="Auth.logout()" class="w-full text-xs text-stone-400 hover:text-red-500 py-2 transition">退出 / 切换账号</button>
             </div>
         </aside>
 
@@ -192,7 +199,8 @@
         // --- 全局状态 ---
         const State = {
             user: null,
-            transactions: [], // 格式: { id, amount, type, category, date, note }
+            isGuest: false,
+            transactions: [], 
             categories: {
                 expense: [
                     { id: 'food', name: '餐饮美食', icon: 'fa-utensils', color: '#f87171' },
@@ -213,21 +221,38 @@
             input: { type: 'expense', category: 'food' }
         };
 
-        // --- 1. 认证服务 (Supabase) ---
+        // --- 1. 认证服务 (混合模式) ---
         const Auth = {
             async init() {
                 initSupabase();
-                if(!supabaseClient) return;
+                
+                // 1. 检查是否是游客
+                const guestMark = localStorage.getItem('shouji_is_guest');
+                if (guestMark === 'true') {
+                    this.loginAsGuest();
+                    return;
+                }
 
-                const { data } = await supabaseClient.auth.getSession();
-                if (data.session) {
-                    this.setUser(data.session.user);
+                // 2. 检查 Supabase 登录
+                if(supabaseClient) {
+                    const { data } = await supabaseClient.auth.getSession();
+                    if (data.session) {
+                        this.setUser(data.session.user, false);
+                    } else {
+                        this.showLogin();
+                    }
                 } else {
                     this.showLogin();
                 }
 
-                // 监听登录表单
                 document.getElementById('login-form').addEventListener('submit', this.handleLogin);
+            },
+
+            loginAsGuest() {
+                localStorage.setItem('shouji_is_guest', 'true');
+                const guestUser = { id: 'guest', email: 'Guest@local' };
+                this.setUser(guestUser, true);
+                Helpers.showToast('已进入离线模式');
             },
 
             async handleLogin(e) {
@@ -246,16 +271,26 @@
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 处理中...';
                 msg.innerText = "";
 
-                // 尝试登录
                 let { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
                 if (error) {
-                    // 如果登录失败，尝试注册 (自动注册逻辑)
-                    console.log("登录失败，尝试注册...", error.message);
+                    // 如果是频率限制错误
+                    if (error.message.includes('rate limit')) {
+                        msg.innerText = "⚠️ 操作太频繁，请稍后再试，或使用游客模式";
+                        btn.disabled = false;
+                        btn.innerText = "登录 / 自动注册";
+                        return;
+                    }
+
+                    // 尝试注册
                     const res = await supabaseClient.auth.signUp({ email, password });
-                    
                     if (res.error) {
-                        msg.innerText = "错误: " + res.error.message;
+                        // 再次检查频率限制
+                        if (res.error.message.includes('rate limit')) {
+                             msg.innerText = "⚠️ 注册太频繁，请直接点击下方的“游客试用”";
+                        } else {
+                             msg.innerText = "错误: " + res.error.message;
+                        }
                         btn.disabled = false;
                         btn.innerText = "登录 / 自动注册";
                         return;
@@ -265,27 +300,44 @@
                 }
 
                 if (data.user) {
-                    Auth.setUser(data.user);
+                    Auth.setUser(data.user, false);
                 }
             },
 
-            setUser(user) {
+            setUser(user, isGuest) {
                 State.user = user;
+                State.isGuest = isGuest;
+                
                 document.getElementById('auth-view').classList.add('hidden-view');
                 const app = document.getElementById('app-view');
                 app.classList.remove('hidden-view');
                 setTimeout(() => app.classList.remove('opacity-0'), 100);
 
-                document.getElementById('user-email').innerText = user.email.split('@')[0];
-                document.getElementById('user-avatar').innerText = user.email[0].toUpperCase();
+                // 更新侧边栏用户信息
+                const name = user.email ? user.email.split('@')[0] : 'Guest';
+                document.getElementById('user-email').innerText = name;
+                document.getElementById('user-avatar').innerText = name[0].toUpperCase();
+
+                const statusEl = document.getElementById('user-status');
+                if (isGuest) {
+                    statusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> 离线模式';
+                    statusEl.className = "text-[10px] flex items-center gap-1 text-gray-500";
+                } else {
+                    statusEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 已连接云端';
+                    statusEl.className = "text-[10px] flex items-center gap-1 text-green-600";
+                }
 
                 DataService.fetch();
                 Router.navigate('dashboard');
             },
 
             async logout() {
-                if(confirm('确定退出登录？')) {
-                    await supabaseClient.auth.signOut();
+                if(confirm('确定退出？')) {
+                    if (State.isGuest) {
+                        localStorage.removeItem('shouji_is_guest');
+                    } else if (supabaseClient) {
+                        await supabaseClient.auth.signOut();
+                    }
                     window.location.reload();
                 }
             },
@@ -296,40 +348,69 @@
             }
         };
 
-        // --- 2. 数据服务 (Supabase CRUD) ---
+        // --- 2. 数据服务 (混合存取) ---
         const DataService = {
             async fetch() {
                 if (!State.user) return;
-                const { data, error } = await supabaseClient
-                    .from('transactions')
-                    .select('*')
-                    .order('date', { ascending: false });
                 
-                if (data) {
-                    State.transactions = data;
-                    // 刷新当前视图
-                    Router.refresh(); 
+                if (State.isGuest) {
+                    // [GUEST] 本地读取
+                    const localData = localStorage.getItem('shouji_guest_data');
+                    State.transactions = localData ? JSON.parse(localData) : [];
+                    Router.refresh();
+                } else {
+                    // [CLOUD] 云端读取
+                    const { data, error } = await supabaseClient
+                        .from('transactions')
+                        .select('*')
+                        .order('date', { ascending: false });
+                    
+                    if (data) {
+                        State.transactions = data;
+                        Router.refresh(); 
+                    }
                 }
             },
 
             async add(payload) {
-                const { error } = await supabaseClient.from('transactions').insert([{
+                const newTx = {
                     user_id: State.user.id,
-                    ...payload
-                }]);
-                
-                if (!error) {
-                    Helpers.showToast("记账成功");
-                    this.fetch();
+                    ...payload,
+                    id: State.isGuest ? Date.now() : undefined // 游客模式生成假ID
+                };
+
+                if (State.isGuest) {
+                    // [GUEST] 本地保存
+                    State.transactions.unshift(newTx);
+                    localStorage.setItem('shouji_guest_data', JSON.stringify(State.transactions));
+                    Helpers.showToast("已保存 (本地)");
+                    Router.refresh();
                     return true;
                 } else {
-                    alert("保存失败: " + error.message);
-                    return false;
+                    // [CLOUD] 云端保存
+                    const { error } = await supabaseClient.from('transactions').insert([newTx]);
+                    if (!error) {
+                        Helpers.showToast("已同步云端");
+                        this.fetch();
+                        return true;
+                    } else {
+                        alert("云端保存失败: " + error.message);
+                        return false;
+                    }
                 }
             },
 
             async delete(id) {
-                if(confirm('确定删除这条记录吗？')) {
+                if(!confirm('确定删除这条记录吗？')) return;
+
+                if (State.isGuest) {
+                    // [GUEST] 本地删除
+                    State.transactions = State.transactions.filter(t => t.id !== id);
+                    localStorage.setItem('shouji_guest_data', JSON.stringify(State.transactions));
+                    Helpers.showToast("已删除");
+                    Router.refresh();
+                } else {
+                    // [CLOUD] 云端删除
                     const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
                     if(!error) {
                         Helpers.showToast("已删除");
@@ -339,7 +420,7 @@
             }
         };
 
-        // --- 3. 路由与渲染 ---
+        // --- 3. 路由与渲染 (保持不变) ---
         const Router = {
             currentTab: 'dashboard',
             navigate(tab) {
@@ -377,7 +458,6 @@
                 
                 container.innerHTML = `
                     <div class="grid grid-cols-12 gap-6 animate-slide-in pb-10">
-                        <!-- 统计卡片 -->
                         <div class="col-span-4 bg-white rounded-3xl p-6 shadow-card border border-stone-50 relative overflow-hidden group hover:-translate-y-1 transition">
                             <div class="absolute right-0 top-0 w-32 h-32 bg-teal-50 rounded-full blur-2xl -mr-10 -mt-10"></div>
                             <p class="text-sm text-stone-500 font-medium relative z-10">本月支出</p>
@@ -393,7 +473,6 @@
                             <h3 class="text-3xl font-bold mt-2">¥${stats.net}</h3>
                         </div>
 
-                        <!-- 记账表单 -->
                         <div class="col-span-4 bg-white rounded-3xl p-6 shadow-card border border-stone-50 h-[400px] flex flex-col">
                             <h3 class="font-bold text-stone-800 mb-4 flex items-center gap-2">
                                 <i class="fa-solid fa-pen-nib text-teal-500"></i> 快速记账
@@ -413,7 +492,6 @@
                             <button onclick="Handlers.submit()" class="w-full bg-stone-800 hover:bg-black text-white py-3 rounded-xl font-bold mt-4 shadow-lg active:scale-95 transition">确认</button>
                         </div>
 
-                        <!-- 近期列表 -->
                         <div class="col-span-8 bg-white rounded-3xl p-6 shadow-card border border-stone-50 h-[400px] flex flex-col">
                             <h3 class="font-bold text-stone-800 mb-4">近期账单</h3>
                             <div class="flex-1 overflow-auto">
@@ -557,7 +635,6 @@
             }
         };
 
-        // --- 启动 ---
         window.addEventListener('DOMContentLoaded', () => {
             Auth.init();
         });
