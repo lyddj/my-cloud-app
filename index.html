@@ -45,7 +45,7 @@
             }
         }
 
-        // --- SUPABASE 配置 (已更新为你提供的 Key) ---
+        // --- SUPABASE 配置 ---
         const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
         
@@ -226,14 +226,12 @@
             async init() {
                 initSupabase();
                 
-                // 1. 检查是否是游客
                 const guestMark = localStorage.getItem('shouji_is_guest');
                 if (guestMark === 'true') {
                     this.loginAsGuest();
                     return;
                 }
 
-                // 2. 检查 Supabase 登录
                 if(supabaseClient) {
                     const { data } = await supabaseClient.auth.getSession();
                     if (data.session) {
@@ -271,10 +269,10 @@
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 处理中...';
                 msg.innerText = "";
 
+                // 先尝试登录
                 let { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
                 if (error) {
-                    // 如果是频率限制错误
                     if (error.message.includes('rate limit')) {
                         msg.innerText = "⚠️ 操作太频繁，请稍后再试，或使用游客模式";
                         btn.disabled = false;
@@ -282,12 +280,15 @@
                         return;
                     }
 
-                    // 尝试注册
+                    // 登录失败则尝试注册
                     const res = await supabaseClient.auth.signUp({ email, password });
+                    
                     if (res.error) {
-                        // 再次检查频率限制
-                        if (res.error.message.includes('rate limit')) {
-                             msg.innerText = "⚠️ 注册太频繁，请直接点击下方的“游客试用”";
+                        const errMsg = res.error.message.toLowerCase();
+                        if (errMsg.includes('rate limit')) {
+                             msg.innerText = "⚠️ 注册太频繁，请先使用游客模式";
+                        } else if (errMsg.includes('signups are disabled') || errMsg.includes('signup is disabled')) {
+                             msg.innerText = "⚠️ 云端注册功能未开启 (请在 Supabase 后台开启 Enable Email Provider)";
                         } else {
                              msg.innerText = "错误: " + res.error.message;
                         }
@@ -313,7 +314,6 @@
                 app.classList.remove('hidden-view');
                 setTimeout(() => app.classList.remove('opacity-0'), 100);
 
-                // 更新侧边栏用户信息
                 const name = user.email ? user.email.split('@')[0] : 'Guest';
                 document.getElementById('user-email').innerText = name;
                 document.getElementById('user-avatar').innerText = name[0].toUpperCase();
@@ -348,18 +348,16 @@
             }
         };
 
-        // --- 2. 数据服务 (混合存取) ---
+        // --- 2. 数据服务 ---
         const DataService = {
             async fetch() {
                 if (!State.user) return;
                 
                 if (State.isGuest) {
-                    // [GUEST] 本地读取
                     const localData = localStorage.getItem('shouji_guest_data');
                     State.transactions = localData ? JSON.parse(localData) : [];
                     Router.refresh();
                 } else {
-                    // [CLOUD] 云端读取
                     const { data, error } = await supabaseClient
                         .from('transactions')
                         .select('*')
@@ -376,18 +374,16 @@
                 const newTx = {
                     user_id: State.user.id,
                     ...payload,
-                    id: State.isGuest ? Date.now() : undefined // 游客模式生成假ID
+                    id: State.isGuest ? Date.now() : undefined
                 };
 
                 if (State.isGuest) {
-                    // [GUEST] 本地保存
                     State.transactions.unshift(newTx);
                     localStorage.setItem('shouji_guest_data', JSON.stringify(State.transactions));
                     Helpers.showToast("已保存 (本地)");
                     Router.refresh();
                     return true;
                 } else {
-                    // [CLOUD] 云端保存
                     const { error } = await supabaseClient.from('transactions').insert([newTx]);
                     if (!error) {
                         Helpers.showToast("已同步云端");
@@ -404,13 +400,11 @@
                 if(!confirm('确定删除这条记录吗？')) return;
 
                 if (State.isGuest) {
-                    // [GUEST] 本地删除
                     State.transactions = State.transactions.filter(t => t.id !== id);
                     localStorage.setItem('shouji_guest_data', JSON.stringify(State.transactions));
                     Helpers.showToast("已删除");
                     Router.refresh();
                 } else {
-                    // [CLOUD] 云端删除
                     const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
                     if(!error) {
                         Helpers.showToast("已删除");
@@ -420,7 +414,7 @@
             }
         };
 
-        // --- 3. 路由与渲染 (保持不变) ---
+        // --- 3. 路由与渲染 ---
         const Router = {
             currentTab: 'dashboard',
             navigate(tab) {
