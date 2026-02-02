@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随手记 Cloud Desktop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: { 50: '#f0fdfa', 100: '#ccfbf1', 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 800: '#115e59', 900: '#134e4a' },
+                        stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 800: '#292524', 900: '#1c1917' },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.05)',
+                        'card': '0 2px 20px rgba(0, 0, 0, 0.02), 0 10px 40px rgba(0, 0, 0, 0.04)',
+                        'float': '0 20px 50px -12px rgba(0, 0, 0, 0.1)',
+                        'glow': '0 0 20px rgba(20, 184, 166, 0.3)'
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f5f5f4; color: #292524; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+        }
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item:hover:not(.active) { background-color: #f0fdfa; color: #0f766e; }
+
+        .modern-input {
+            background-color: #f5f5f4;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .modern-input:focus {
+            background-color: white;
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+            outline: none;
+        }
+        
+        .chart-wrapper { position: relative; height: 100%; width: 100%; }
+        .hidden-view { display: none !important; }
+    </style>
+</head>
+<body class="font-sans selection:bg-teal-100 selection:text-teal-900">
+
+    <!-- ================= AUTH VIEW ================= -->
+    <div id="auth-view" class="fixed inset-0 z-50 flex items-center justify-center bg-[#f0f2f5] overflow-hidden">
+        <!-- Background Blobs -->
+        <div class="absolute top-0 -left-4 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div class="absolute top-0 -right-4 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-32 left-20 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+
+        <!-- Login Card -->
+        <div class="glass-panel w-full max-w-md p-8 rounded-3xl shadow-float relative animate-fade-in mx-4">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mx-auto mb-4">
+                    <i class="fa-solid fa-cloud"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-stone-800 tracking-tight">欢迎回来</h2>
+                <p class="text-stone-500 text-sm mt-1">登录您的 Cloud Desktop 账户</p>
+            </div>
+
+            <form onsubmit="Auth.login(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1 ml-1">账号</label>
+                    <div class="relative">
+                        <i class="fa-regular fa-user absolute left-4 top-3.5 text-stone-400"></i>
+                        <input type="text" id="login-user" class="modern-input w-full pl-10 pr-4 py-3 rounded-xl font-medium text-stone-700" placeholder="admin" value="admin">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1 ml-1">密码</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-3.5 text-stone-400"></i>
+                        <input type="password" id="login-pass" class="modern-input w-full pl-10 pr-4 py-3 rounded-xl font-medium text-stone-700" placeholder="••••••" value="123456">
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between text-xs text-stone-500 px-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="accent-teal-500 rounded">
+                        记住我
+                    </label>
+                    <a href="#" class="hover:text-teal-600 transition">忘记密码?</a>
+                </div>
+
+                <button type="submit" id="login-btn" class="w-full bg-stone-800 hover:bg-black text-white py-3.5 rounded-xl font-bold transition shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2">
+                    <span>立即登录</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div class="mt-8 text-center text-xs text-stone-400">
+                演示账号: admin / 123456
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= APP VIEW ================= -->
+    <div id="app-view" class="flex h-screen hidden-view animate-fade-in opacity-0">
+        <!-- Sidebar -->
+        <aside class="w-64 flex-none bg-white border-r border-stone-100 flex flex-col z-20 shadow-sm">
+            <div class="h-20 flex items-center px-8">
+                <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg flex items-center justify-center text-white shadow-lg mr-3">
+                    <i class="fa-solid fa-cloud"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-stone-800">Cloud Pro</span>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <button onclick="Router.navigate('dashboard')" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium" data-tab="dashboard">
+                    <i class="fa-solid fa-layer-group w-5 text-center"></i>
+                    仪表盘
+                </button>
+                <button onclick="Router.navigate('analysis')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-stone-500 text-sm font-medium" data-tab="analysis">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    收支分析
+                </button>
+                <button onclick="Router.navigate('transactions')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-stone-500 text-sm font-medium" data-tab="transactions">
+                    <i class="fa-solid fa-list-ul w-5 text-center"></i>
+                    账单明细
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-stone-100 space-y-2">
+                <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-stone-50 border border-stone-100">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0d9488&color=fff" class="w-8 h-8 rounded-full shadow-sm">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-stone-800 truncate" id="user-display-name">Admin</p>
+                        <p class="text-xs text-stone-400 truncate">在线</p>
+                    </div>
+                </div>
+                <button onclick="Auth.logout()" class="w-full flex items-center justify-center gap-2 text-xs text-stone-500 hover:text-red-500 py-2 transition">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> 退出登录
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col relative overflow-hidden bg-[#F8FAFC]">
+            <header class="h-20 flex-none px-8 flex items-center justify-between z-10">
+                <div>
+                    <h2 id="page-title" class="text-2xl font-bold text-stone-800 tracking-tight">概览</h2>
+                    <p id="page-date" class="text-xs text-stone-400 font-medium mt-1">更新于刚刚</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-white px-4 py-2 rounded-full border border-stone-200 shadow-sm flex items-center gap-2 text-sm text-stone-600 hover:border-teal-400 cursor-pointer transition">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span>本月</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-stone-400"></i>
+                    </div>
+                    <button class="w-10 h-10 bg-white rounded-full border border-stone-200 shadow-sm flex items-center justify-center text-stone-500 hover:text-teal-600 transition relative">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div id="main-view" class="flex-1 overflow-y-auto px-8 pb-8 pt-2">
+                <!-- Dynamic Content -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast-container" class="fixed top-8 left-1/2 transform -translate-x-1/2 pointer-events-none z-50 transition-all duration-300 opacity-0 translate-y-[-20px]">
+        <div class="glass-panel px-6 py-3 rounded-full shadow-float text-sm font-medium flex items-center gap-2 text-stone-700">
+            <i class="fa-solid fa-circle-check text-teal-500"></i>
+            <span id="toast-message">操作成功</span>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Authentication ---
+        const Auth = {
+            currentUser: null,
+            
+            init() {
+                const storedUser = localStorage.getItem('shouji_user');
+                if (storedUser) {
+                    this.currentUser = JSON.parse(storedUser);
+                    this.showApp();
+                } else {
+                    this.showLogin();
+                }
+            },
+
+            login(e) {
+                e.preventDefault();
+                const userIn = document.getElementById('login-user').value;
+                const passIn = document.getElementById('login-pass').value;
+                const btn = document.getElementById('login-btn');
+
+                // Loading State
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+                btn.disabled = true;
+
+                // Simulate Network Delay
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+
+                    if (userIn && passIn) { // Simplified Logic
+                        this.currentUser = { name: userIn, avatar: 'default' };
+                        localStorage.setItem('shouji_user', JSON.stringify(this.currentUser));
+                        Helpers.showToast(`欢迎回来, ${userIn}`);
+                        this.showApp();
+                    } else {
+                        alert('请输入账号和密码');
+                    }
+                }, 800);
+            },
+
+            logout() {
+                if(confirm('确定要退出登录吗？')) {
+                    this.currentUser = null;
+                    localStorage.removeItem('shouji_user');
+                    this.showLogin();
+                }
+            },
+
+            showApp() {
+                document.getElementById('auth-view').classList.add('hidden-view');
+                const app = document.getElementById('app-view');
+                app.classList.remove('hidden-view');
+                // Trigger reflow to restart animation if needed, or just let CSS handle opacity
+                setTimeout(() => app.classList.remove('opacity-0'), 50);
+                
+                document.getElementById('user-display-name').innerText = this.currentUser.name;
+                DataService.init();
+                Router.navigate('dashboard');
+            },
+
+            showLogin() {
+                document.getElementById('app-view').classList.add('hidden-view', 'opacity-0');
+                document.getElementById('auth-view').classList.remove('hidden-view');
+                // Reset inputs
+                document.getElementById('login-pass').value = '';
+            }
+        };
+
+        // --- 2. State & Data ---
+        const State = {
+            currentTab: 'dashboard',
+            transactions: [],
+            categories: {
+                expense: [
+                    { id: 'food', name: '餐饮美食', icon: 'fa-utensils', color: '#f87171' },
+                    { id: 'shop', name: '日常购物', icon: 'fa-bag-shopping', color: '#fb923c' },
+                    { id: 'transport', name: '交通出行', icon: 'fa-bus', color: '#38bdf8' },
+                    { id: 'home', name: '居住缴费', icon: 'fa-house', color: '#a78bfa' },
+                    { id: 'ent', name: '休闲娱乐', icon: 'fa-film', color: '#e879f9' },
+                    { id: 'med', name: '医疗健康', icon: 'fa-notes-medical', color: '#ef4444' },
+                    { id: 'study', name: '教育学习', icon: 'fa-graduation-cap', color: '#4ade80' },
+                    { id: 'other', name: '其他支出', icon: 'fa-circle-notch', color: '#94a3b8' }
+                ],
+                income: [
+                    { id: 'salary', name: '工资收入', icon: 'fa-money-bill-wave', color: '#facc15' },
+                    { id: 'invest', name: '理财收益', icon: 'fa-chart-line', color: '#2dd4bf' },
+                    { id: 'other-in', name: '其他收入', icon: 'fa-circle-plus', color: '#94a3b8' }
+                ]
+            },
+            input: {
+                type: 'expense',
+                categoryId: 'food',
+                amount: '',
+                date: new Date().toISOString().split('T')[0],
+                note: ''
+            }
+        };
+
+        const DataService = {
+            init() {
+                const stored = localStorage.getItem('shouji_desktop_data');
+                if (stored) {
+                    State.transactions = JSON.parse(stored);
+                } else {
+                    State.transactions = [
+                        { id: 1, type: 'expense', categoryId: 'food', amount: 48.0, date: getDateStr(0), note: '商务午餐' },
+                        { id: 2, type: 'income', categoryId: 'salary', amount: 12000, date: getDateStr(-1), note: '工资发放' },
+                        { id: 3, type: 'expense', categoryId: 'shop', amount: 399, date: getDateStr(-2), note: '机械键盘' },
+                        { id: 4, type: 'expense', categoryId: 'transport', amount: 25, date: getDateStr(-2), note: '打车' },
+                        { id: 5, type: 'expense', categoryId: 'ent', amount: 128, date: getDateStr(-3), note: 'Netflix订阅' }
+                    ];
+                    this.save();
+                }
+            },
+            save() {
+                localStorage.setItem('shouji_desktop_data', JSON.stringify(State.transactions));
+            },
+            add(t) {
+                State.transactions.unshift({ ...t, id: Date.now() });
+                this.save();
+            },
+            delete(id) {
+                State.transactions = State.transactions.filter(t => t.id !== id);
+                this.save();
+            }
+        };
+
+        function getDateStr(offset) {
+            const d = new Date();
+            d.setDate(d.getDate() + offset);
+            return d.toISOString().split('T')[0];
+        }
+
+        // --- 3. Router ---
+        const Router = {
+            navigate(tab) {
+                if (!Auth.currentUser) return; // Guard
+
+                State.currentTab = tab;
+                document.querySelectorAll('.nav-item').forEach(el => {
+                    if(el.dataset.tab === tab) el.classList.add('active', 'shadow-lg');
+                    else el.classList.remove('active', 'shadow-lg');
+                });
+                
+                const titles = { dashboard: '概览', analysis: '收支分析', transactions: '账单明细' };
+                document.getElementById('page-title').innerText = titles[tab];
+                document.getElementById('page-date').innerText = new Date().toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                Render[tab]();
+            }
+        };
+
+        // --- 4. Render Views ---
+        const Render = {
+            dashboard() {
+                const container = document.getElementById('main-view');
+                const stats = Helpers.calcStats();
+                
+                container.innerHTML = `
+                    <div class="grid grid-cols-12 gap-6 animate-slide-in pb-10">
+                        <!-- Stats Cards -->
+                        <div class="col-span-4 bg-white rounded-3xl p-6 shadow-card border border-stone-50 relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                            <div class="absolute right-0 top-0 w-32 h-32 bg-teal-50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-teal-100 transition"></div>
+                            <p class="text-sm text-stone-500 font-medium relative z-10">本月支出</p>
+                            <h3 class="text-3xl font-bold text-stone-800 mt-2 relative z-10">¥${stats.monthExp}</h3>
+                            <div class="mt-4 flex items-center text-xs font-medium relative z-10">
+                                <span class="text-red-500 bg-red-50 px-2 py-0.5 rounded mr-2">↑ 12%</span>
+                                <span class="text-stone-400">环比上月</span>
+                            </div>
+                        </div>
+                        <div class="col-span-4 bg-white rounded-3xl p-6 shadow-card border border-stone-50 relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                             <div class="absolute right-0 top-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-indigo-100 transition"></div>
+                            <p class="text-sm text-stone-500 font-medium relative z-10">本月收入</p>
+                            <h3 class="text-3xl font-bold text-stone-800 mt-2 relative z-10">¥${stats.monthInc}</h3>
+                             <div class="mt-4 flex items-center text-xs font-medium relative z-10">
+                                <span class="text-teal-500 bg-teal-50 px-2 py-0.5 rounded mr-2">↑ 5%</span>
+                                <span class="text-stone-400">环比上月</span>
+                            </div>
+                        </div>
+                        <div class="col-span-4 bg-gradient-to-br from-teal-500 to-teal-700 rounded-3xl p-6 shadow-card text-white relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                             <div class="absolute right-0 bottom-0 w-40 h-40 bg-white/10 rounded-full blur-xl -mr-10 -mb-10"></div>
+                            <p class="text-sm text-teal-100 font-medium">净资产</p>
+                            <h3 class="text-3xl font-bold mt-2">¥${stats.netWorth}</h3>
+                            <div class="mt-4 text-xs text-teal-100/80">财务状况良好，继续保持</div>
+                        </div>
+
+                        <!-- Recent List -->
+                        <div class="col-span-8 bg-white rounded-3xl p-6 shadow-card border border-stone-50 flex flex-col">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-stone-800">近期账单</h3>
+                                <button onclick="Router.navigate('transactions')" class="text-xs text-teal-600 font-medium hover:underline">查看全部</button>
+                            </div>
+                            <div class="flex-1 overflow-auto pr-2">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="text-xs text-stone-400 border-b border-stone-100">
+                                            <th class="pb-3 font-medium pl-2">分类</th>
+                                            <th class="pb-3 font-medium">备注</th>
+                                            <th class="pb-3 font-medium">日期</th>
+                                            <th class="pb-3 font-medium text-right pr-2">金额</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-sm">
+                                        ${State.transactions.slice(0, 5).map(t => {
+                                            const cat = Helpers.getCategory(t.type, t.categoryId);
+                                            return `
+                                            <tr class="group hover:bg-stone-50 transition border-b border-stone-50 last:border-0">
+                                                <td class="py-3 pl-2">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs" style="background:${cat.color}20; color:${cat.color}">
+                                                            <i class="fa-solid ${cat.icon}"></i>
+                                                        </div>
+                                                        <span class="font-medium text-stone-700">${cat.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3 text-stone-500">${t.note || '-'}</td>
+                                                <td class="py-3 text-stone-400 text-xs">${t.date}</td>
+                                                <td class="py-3 text-right font-bold pr-2 ${t.type==='expense'?'text-stone-800':'text-teal-600'}">
+                                                    ${t.type==='expense'?'-':'+'} ¥${t.amount}
+                                                </td>
+                                            </tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Quick Add -->
+                        <div class="col-span-4 bg-white rounded-3xl p-6 shadow-card border border-stone-50 h-[420px] flex flex-col">
+                            <h3 class="font-bold text-stone-800 mb-5 flex items-center gap-2">
+                                <i class="fa-solid fa-pen-nib text-teal-500"></i> 快速记账
+                            </h3>
+                            
+                            <div class="flex bg-stone-100 p-1 rounded-xl mb-4">
+                                <button onclick="Handlers.setType('expense')" id="btn-expense" class="flex-1 py-2 rounded-lg text-sm font-medium transition shadow-sm bg-white text-stone-800">支出</button>
+                                <button onclick="Handlers.setType('income')" id="btn-income" class="flex-1 py-2 rounded-lg text-sm font-medium transition text-stone-500 hover:text-stone-700">收入</button>
+                            </div>
+
+                            <div class="space-y-4 flex-1">
+                                <div>
+                                    <label class="text-xs font-medium text-stone-500 ml-1 mb-1 block">金额</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2.5 text-stone-400 font-bold">¥</span>
+                                        <input type="number" id="input-amount" class="modern-input w-full pl-8 pr-4 py-2.5 rounded-xl font-bold text-stone-800 placeholder-stone-300" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-stone-500 ml-1 mb-1 block">分类</label>
+                                    <select id="input-cat" class="modern-input w-full px-4 py-2.5 rounded-xl text-sm text-stone-700 appearance-none cursor-pointer">
+                                        <!-- Options populated by JS -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-stone-500 ml-1 mb-1 block">备注</label>
+                                    <input type="text" id="input-note" class="modern-input w-full px-4 py-2.5 rounded-xl text-sm text-stone-700 placeholder-stone-300" placeholder="用途说明...">
+                                </div>
+                            </div>
+
+                            <button onclick="Handlers.submit()" class="w-full bg-stone-800 hover:bg-black text-white py-3 rounded-xl font-medium mt-4 transition shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check"></i> 确认记账
+                            </button>
+                        </div>
+                        
+                        <!-- Trend Chart -->
+                        <div class="col-span-12 bg-white rounded-3xl p-6 shadow-card border border-stone-50 h-80">
+                            <h3 class="font-bold text-stone-800 mb-4">收支趋势</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-main"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                Handlers.updateCatOptions();
+
+                setTimeout(() => {
+                    const ctx = document.getElementById('chart-main').getContext('2d');
+                    const trend = Helpers.getTrendData();
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                    gradient.addColorStop(0, 'rgba(20, 184, 166, 0.2)');
+                    gradient.addColorStop(1, 'rgba(20, 184, 166, 0)');
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: trend.labels,
+                            datasets: [{
+                                label: '支出',
+                                data: trend.expense,
+                                borderColor: '#f87171',
+                                backgroundColor: 'transparent',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }, {
+                                label: '收入',
+                                data: trend.income,
+                                borderColor: '#2dd4bf',
+                                backgroundColor: gradient,
+                                fill: true,
+                                borderWidth: 3,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } }
+                            },
+                            scales: {
+                                y: { grid: { borderDash: [4, 4], drawBorder: false }, ticks: { callback: v => '¥' + v } },
+                                x: { grid: { display: false } }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index',
+                            },
+                        }
+                    });
+                }, 50);
+            },
+            analysis() {
+                document.getElementById('main-view').innerHTML = `
+                    <div class="grid grid-cols-2 gap-6 animate-slide-in h-full pb-10">
+                        <div class="col-span-1 bg-white rounded-3xl p-8 shadow-card border border-stone-50 flex flex-col items-center justify-center relative">
+                            <h3 class="absolute top-6 left-6 font-bold text-stone-800 border-l-4 border-teal-500 pl-3">支出构成</h3>
+                            <div class="w-2/3 h-2/3">
+                                <canvas id="chart-pie"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-span-1 bg-white rounded-3xl p-8 shadow-card border border-stone-50 relative">
+                             <h3 class="font-bold text-stone-800 border-l-4 border-indigo-500 pl-3 mb-6">分类排行</h3>
+                             <div class="space-y-4">
+                                ${Helpers.getCategoryRank().map((item, idx) => `
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-6 text-stone-400 font-bold text-sm">0${idx+1}</div>
+                                        <div class="flex-1">
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span class="font-medium text-stone-700">${item.name}</span>
+                                                <span class="font-bold text-stone-800">¥${item.amount}</span>
+                                            </div>
+                                            <div class="h-2 bg-stone-100 rounded-full overflow-hidden">
+                                                <div class="h-full bg-teal-500 rounded-full" style="width: ${item.percent}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                             </div>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    const ctx = document.getElementById('chart-pie').getContext('2d');
+                    const data = Helpers.getPieData();
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                data: data.values,
+                                backgroundColor: data.colors,
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            cutout: '70%',
+                            plugins: {
+                                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                            }
+                        }
+                    });
+                }, 50);
+            },
+            transactions() {
+                const list = State.transactions.sort((a,b) => new Date(b.date) - new Date(a.date));
+                document.getElementById('main-view').innerHTML = `
+                    <div class="bg-white rounded-3xl shadow-card border border-stone-50 overflow-hidden animate-slide-in">
+                        <div class="p-6 border-b border-stone-100 flex justify-between items-center">
+                            <h3 class="font-bold text-stone-800">全部记录 (${list.length})</h3>
+                            <button class="text-sm text-stone-500 hover:text-teal-600"><i class="fa-solid fa-download mr-1"></i> 导出</button>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead class="bg-stone-50/50 text-stone-500 text-xs uppercase tracking-wider font-medium">
+                                <tr>
+                                    <th class="px-6 py-4">分类</th>
+                                    <th class="px-6 py-4">备注详情</th>
+                                    <th class="px-6 py-4">时间</th>
+                                    <th class="px-6 py-4">类型</th>
+                                    <th class="px-6 py-4 text-right">金额</th>
+                                    <th class="px-6 py-4 text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-stone-50">
+                                ${list.map(t => {
+                                    const cat = Helpers.getCategory(t.type, t.categoryId);
+                                    return `
+                                    <tr class="hover:bg-teal-50/30 transition group">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm shadow-sm" style="background:white; color:${cat.color}">
+                                                    <i class="fa-solid ${cat.icon}"></i>
+                                                </div>
+                                                <span class="font-medium text-stone-700 text-sm">${cat.name}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-stone-500">${t.note || '-'}</td>
+                                        <td class="px-6 py-4 text-sm text-stone-400 font-mono">${t.date}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 rounded text-xs font-medium ${t.type==='income'?'bg-teal-100 text-teal-700':'bg-stone-100 text-stone-600'}">
+                                                ${t.type==='income'?'收入':'支出'}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right font-bold text-stone-800">¥${t.amount.toFixed(2)}</td>
+                                        <td class="px-6 py-4 text-center">
+                                            <button onclick="Handlers.delete(${t.id})" class="w-8 h-8 rounded-full hover:bg-red-50 text-stone-300 hover:text-red-500 transition">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        };
+
+        // --- 5. Handlers & Helpers ---
+        const Handlers = {
+            setType(type) {
+                State.input.type = type;
+                State.input.categoryId = State.categories[type][0].id;
+                
+                const btnExp = document.getElementById('btn-expense');
+                const btnInc = document.getElementById('btn-income');
+                
+                if (type === 'expense') {
+                    btnExp.className = "flex-1 py-2 rounded-lg text-sm font-medium transition shadow-sm bg-white text-stone-800";
+                    btnInc.className = "flex-1 py-2 rounded-lg text-sm font-medium transition text-stone-500 hover:text-stone-700";
+                } else {
+                    btnInc.className = "flex-1 py-2 rounded-lg text-sm font-medium transition shadow-sm bg-white text-teal-700";
+                    btnExp.className = "flex-1 py-2 rounded-lg text-sm font-medium transition text-stone-500 hover:text-stone-700";
+                }
+                
+                this.updateCatOptions();
+            },
+            updateCatOptions() {
+                const select = document.getElementById('input-cat');
+                if(!select) return;
+                select.innerHTML = State.categories[State.input.type].map(c => 
+                    `<option value="${c.id}">${c.name}</option>`
+                ).join('');
+            },
+            submit() {
+                const amtEl = document.getElementById('input-amount');
+                const catEl = document.getElementById('input-cat');
+                const noteEl = document.getElementById('input-note');
+                
+                const amt = parseFloat(amtEl.value);
+                if (!amt || amt <= 0) {
+                    Helpers.showToast('请输入有效金额');
+                    return;
+                }
+
+                DataService.add({
+                    type: State.input.type,
+                    amount: amt,
+                    categoryId: catEl.value,
+                    note: noteEl.value,
+                    date: new Date().toISOString().split('T')[0]
+                });
+
+                amtEl.value = '';
+                noteEl.value = '';
+                Helpers.showToast('记账成功');
+                Render.dashboard();
+            },
+            delete(id) {
+                if(confirm('确认删除该条记录？')) {
+                    DataService.delete(id);
+                    Render.transactions();
+                    Helpers.showToast('已删除');
+                }
+            }
+        };
+
+        const Helpers = {
+            getCategory(type, id) {
+                return State.categories[type].find(c => c.id == id) || { name: '未知', color: '#ccc', icon: 'fa-question' };
+            },
+            calcStats() {
+                const now = new Date();
+                const curMonth = now.toISOString().slice(0, 7);
+                let monthExp = 0, monthInc = 0, total = 0;
+                
+                State.transactions.forEach(t => {
+                    if (t.type === 'income') total += t.amount;
+                    else total -= t.amount;
+                    
+                    if (t.date.startsWith(curMonth)) {
+                        if (t.type === 'income') monthInc += t.amount;
+                        else monthExp += t.amount;
+                    }
+                });
+                
+                return { monthExp: monthExp.toFixed(2), monthInc: monthInc.toFixed(2), netWorth: total.toFixed(2) };
+            },
+            getTrendData() {
+                const labels = [], expense = [], income = [];
+                for(let i=6; i>=0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const ds = d.toISOString().split('T')[0];
+                    labels.push(ds.slice(5)); 
+                    
+                    const dayTx = State.transactions.filter(t => t.date === ds);
+                    expense.push(dayTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
+                    income.push(dayTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));
+                }
+                return { labels, expense, income };
+            },
+            getPieData() {
+                const map = {};
+                State.transactions.filter(t=>t.type==='expense').forEach(t => {
+                    if(!map[t.categoryId]) map[t.categoryId] = 0;
+                    map[t.categoryId] += t.amount;
+                });
+                const labels = [], values = [], colors = [];
+                Object.keys(map).forEach(k => {
+                    const c = this.getCategory('expense', k);
+                    labels.push(c.name);
+                    values.push(map[k]);
+                    colors.push(c.color);
+                });
+                return { labels, values, colors };
+            },
+            getCategoryRank() {
+                 const map = {};
+                 let total = 0;
+                State.transactions.filter(t=>t.type==='expense').forEach(t => {
+                    if(!map[t.categoryId]) map[t.categoryId] = 0;
+                    map[t.categoryId] += t.amount;
+                    total += t.amount;
+                });
+                return Object.keys(map)
+                    .map(k => ({ name: this.getCategory('expense', k).name, amount: map[k] }))
+                    .sort((a,b) => b.amount - a.amount)
+                    .slice(0, 5)
+                    .map(i => ({ ...i, percent: ((i.amount/total)*100).toFixed(0) }));
+            },
+            showToast(msg) {
+                const el = document.getElementById('toast-container');
+                document.getElementById('toast-message').innerText = msg;
+                el.classList.remove('opacity-0', 'translate-y-[-20px]');
+                setTimeout(() => el.classList.add('opacity-0', 'translate-y-[-20px]'), 2000);
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            Auth.init();
+        });
+    </script>
+</body>
+</html>
