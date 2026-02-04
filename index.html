@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
@@ -25,16 +26,19 @@
             }
         }
 
+        // --- 核心配置：使用你提供的 dokkfbt... 密钥 ---
         const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
         
         let supabaseClient;
+        
         function initSupabase() {
             try {
                 if (typeof window.supabase !== 'undefined') {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    console.log("Supabase 连接初始化成功");
                 }
-            } catch (e) { console.error("Init Error:", e); }
+            } catch (e) { console.error("初始化失败:", e); }
         }
     </script>
 
@@ -49,15 +53,19 @@
         @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -30px); } 15% { opacity: 1; transform: translate(-50%, -50%); } 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
         .key-btn { background:white; padding:18px; font-size:20px; font-weight:500; color:#334155; transition: background 0.1s; } 
         .key-btn:active { background:#f1f5f9; }
+        /* Auth Toggle Styles */
+        .auth-tab { @apply flex-1 py-2 text-sm font-bold text-center cursor-pointer transition-colors border-b-2; }
+        .auth-tab.active { @apply border-teal-500 text-teal-600; }
+        .auth-tab.inactive { @apply border-transparent text-gray-400 hover:text-gray-600; }
     </style>
 </head>
 <body>
     <div id="phone-frame">
         <div id="toast-container"></div>
 
-        <!-- 页面: 登录/注册 (V6 改版) -->
+        <!-- 页面: 登录/注册 (分离版) -->
         <div id="auth-view" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white px-8">
-            <div class="mb-10 text-center">
+            <div class="mb-8 text-center">
                 <div class="w-20 h-20 bg-teal-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-glow">
                     <i class="fa-solid fa-cloud text-4xl text-white"></i>
                 </div>
@@ -65,7 +73,13 @@
                 <p class="text-gray-400 text-sm">云端同步 · 安全存储</p>
             </div>
 
-            <!-- 表单区域 -->
+            <!-- 切换条 -->
+            <div class="flex w-full mb-6 border-b border-gray-100">
+                <div id="tab-login" class="auth-tab active" onclick="switchAuthMode('login')">登录账号</div>
+                <div id="tab-signup" class="auth-tab inactive" onclick="switchAuthMode('signup')">注册新用户</div>
+            </div>
+
+            <!-- 表单 -->
             <div class="w-full space-y-4">
                 <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-transparent focus-within:border-teal-500 transition">
                     <i class="fa-solid fa-envelope text-gray-400"></i>
@@ -73,16 +87,12 @@
                 </div>
                 <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-transparent focus-within:border-teal-500 transition">
                     <i class="fa-solid fa-lock text-gray-400"></i>
-                    <input type="password" id="login-pass" placeholder="密码" class="flex-1 bg-transparent outline-none text-sm">
+                    <input type="password" id="login-pass" placeholder="密码 (至少6位)" class="flex-1 bg-transparent outline-none text-sm">
                 </div>
                 
-                <!-- 登录/注册切换 -->
-                <div class="flex gap-2">
-                    <button id="mode-login-btn" onclick="switchAuthMode('login')" class="flex-1 py-2 text-sm font-bold border-b-2 border-teal-500 text-teal-600 transition">登录</button>
-                    <button id="mode-signup-btn" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-sm font-bold border-b-2 border-transparent text-gray-400 transition">注册新账号</button>
-                </div>
-
-                <button onclick="handleAuthSubmit()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-4 active:scale-95 transition-transform" id="auth-submit-btn">立即登录</button>
+                <button onclick="handleAuthSubmit()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2" id="auth-submit-btn">
+                    <span>立即登录</span>
+                </button>
             </div>
 
             <div class="relative my-8 w-full">
@@ -93,9 +103,11 @@
             <button onclick="Auth.loginAsGuest()" class="w-full py-3 bg-white border border-gray-200 text-slate-500 rounded-xl font-bold text-sm transition hover:bg-gray-50">
                 <i class="fa-solid fa-user-secret mr-2"></i>游客直接试用
             </button>
+            
+            <p id="auth-error-msg" class="text-xs text-red-500 mt-4 text-center min-h-[20px]"></p>
         </div>
 
-        <!-- APP 主界面容器 (默认隐藏) -->
+        <!-- APP 主界面容器 -->
         <div id="app-container" class="hidden h-full flex flex-col relative">
             <!-- 视图 1: 账单 -->
             <div id="view-bill" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden">
@@ -228,7 +240,17 @@
             <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closeAssetForm()"></div>
             <div class="relative bg-white rounded-t-3xl h-auto flex flex-col transition-transform translate-y-full duration-300" id="asset-form-panel">
                 <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100"><button onclick="closeAssetForm()" class="text-gray-500 text-sm">取消</button><h3 class="font-bold text-slate-800" id="asset-form-title">添加账户</h3><button onclick="saveAssetForm()" class="text-teal-600 font-bold text-sm">保存</button></div>
-                <div class="p-6 space-y-5 pb-10"><div><label class="text-xs text-gray-400 font-bold mb-3 block">选择图标</label><div class="grid grid-cols-5 gap-4" id="af-icon-grid"></div></div><div class="space-y-3"><div><label class="text-xs text-gray-400 font-bold ml-1">账户名称</label><input id="af-name" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="如: 私房钱"></div><div class="flex gap-4"><div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">当前余额</label><input id="af-balance" type="number" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="0.00"></div><div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">类型</label><div class="flex bg-gray-100 p-1 rounded-xl mt-1 h-[46px]"><button onclick="setAssetFormType('asset')" id="af-type-asset" class="flex-1 rounded-lg text-xs font-bold transition">资产</button><button onclick="setAssetFormType('liability')" id="af-type-liability" class="flex-1 rounded-lg text-xs font-bold transition">负债</button></div></div></div></div></div></div>
+                <div class="p-6 space-y-5 pb-10">
+                    <div><label class="text-xs text-gray-400 font-bold mb-3 block">选择图标</label><div class="grid grid-cols-5 gap-4" id="af-icon-grid"></div></div>
+                    <div class="space-y-3">
+                        <div><label class="text-xs text-gray-400 font-bold ml-1">账户名称</label><input id="af-name" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="如: 私房钱"></div>
+                        <div class="flex gap-4">
+                            <div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">当前余额</label><input id="af-balance" type="number" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="0.00"></div>
+                            <div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">类型</label><div class="flex bg-gray-100 p-1 rounded-xl mt-1 h-[46px]"><button onclick="setAssetFormType('asset')" id="af-type-asset" class="flex-1 rounded-lg text-xs font-bold transition">资产</button><button onclick="setAssetFormType('liability')" id="af-type-liability" class="flex-1 rounded-lg text-xs font-bold transition">负债</button></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -278,22 +300,21 @@
         // --- AUTH V6 (SEPARATED LOGIN/SIGNUP) ---
         function switchAuthMode(mode) {
             state.authMode = mode;
-            const btnLogin = document.getElementById('mode-login-btn');
-            const btnSignup = document.getElementById('mode-signup-btn');
+            const btnLogin = document.getElementById('tab-login');
+            const btnSignup = document.getElementById('tab-signup');
             const btnSubmit = document.getElementById('auth-submit-btn');
+            const errorMsg = document.getElementById('auth-error-msg');
+            
+            errorMsg.innerText = ''; // Clear errors
             
             if (mode === 'login') {
-                btnLogin.classList.add('border-teal-500', 'text-teal-600');
-                btnLogin.classList.remove('border-transparent', 'text-gray-400');
-                btnSignup.classList.remove('border-teal-500', 'text-teal-600');
-                btnSignup.classList.add('border-transparent', 'text-gray-400');
-                btnSubmit.innerText = '立即登录';
+                btnLogin.classList.add('active'); btnLogin.classList.remove('inactive');
+                btnSignup.classList.remove('active'); btnSignup.classList.add('inactive');
+                btnSubmit.innerHTML = '<span>立即登录</span>';
             } else {
-                btnSignup.classList.add('border-teal-500', 'text-teal-600');
-                btnSignup.classList.remove('border-transparent', 'text-gray-400');
-                btnLogin.classList.remove('border-teal-500', 'text-teal-600');
-                btnLogin.classList.add('border-transparent', 'text-gray-400');
-                btnSubmit.innerText = '注册新账号';
+                btnSignup.classList.add('active'); btnSignup.classList.remove('inactive');
+                btnLogin.classList.remove('active'); btnLogin.classList.add('inactive');
+                btnSubmit.innerHTML = '<span>注册新账号</span>';
             }
         }
 
@@ -301,12 +322,16 @@
             if (!supabaseClient) return showToast('系统错误：未连接数据库');
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            if(!email || !pass) return showToast('请输入邮箱和密码');
+            const errorMsg = document.getElementById('auth-error-msg');
+            
+            if(!email || !pass) { errorMsg.innerText = '请输入邮箱和密码'; return; }
+            if(pass.length < 6) { errorMsg.innerText = '密码至少需要6位'; return; }
             
             const btn = document.getElementById('auth-submit-btn');
-            const oldText = btn.innerText;
-            btn.innerText = "处理中...";
+            const oldText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 处理中...';
             btn.disabled = true;
+            errorMsg.innerText = '';
 
             try {
                 if (state.authMode === 'login') {
@@ -327,14 +352,24 @@
                         await fetchData();
                         showToast('注册成功！');
                     } else {
-                        alert('注册成功！如果开启了邮箱验证，请查收邮件。');
+                        alert('注册成功！请直接登录。');
                         switchAuthMode('login');
                     }
                 }
             } catch (err) {
-                alert(err.message);
+                console.error(err);
+                if (err.message.includes('rate limit')) {
+                    errorMsg.innerText = '⚠️ 操作太频繁，请稍后重试 (建议15分钟后)';
+                } else if (err.message.includes('Invalid login')) {
+                    errorMsg.innerText = '账号或密码错误';
+                } else if (err.message.includes('User already registered')) {
+                    errorMsg.innerText = '该邮箱已注册，请直接登录';
+                    switchAuthMode('login');
+                } else {
+                    errorMsg.innerText = err.message;
+                }
             } finally {
-                btn.innerText = oldText;
+                btn.innerHTML = oldText;
                 btn.disabled = false;
             }
         }
