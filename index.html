@@ -27,7 +27,7 @@
             }
         }
 
-        // --- 核心配置 ---
+        // --- 核心配置：已强制更新为您提供的正确 KEY (dokkfbt...) ---
         const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
         
@@ -37,8 +37,9 @@
             try {
                 if (typeof window.supabase !== 'undefined') {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    console.log("数据库连接初始化...");
                 }
-            } catch (e) { console.error("Supabase Init Error:", e); }
+            } catch (e) { console.error("初始化失败:", e); }
         }
     </script>
 
@@ -49,7 +50,7 @@
         @media (min-width: 450px) { #phone-frame { height: 85vh; border-radius: 40px; border: 8px solid #1e293b; } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; animation: fadeUp 2s ease-in-out forwards; z-index: 100; pointer-events: none; backdrop-filter: blur(4px); width: max-content; }
+        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; animation: fadeUp 2s ease-in-out forwards; z-index: 100; pointer-events: none; width: max-content; }
         @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -30px); } 15% { opacity: 1; transform: translate(-50%, -50%); } 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
         .key-btn { background:white; padding:18px; font-size:20px; font-weight:500; color:#334155; transition: background 0.1s; } 
         .key-btn:active { background:#f1f5f9; }
@@ -140,7 +141,7 @@
             </div>
             <div id="login-view" class="h-full flex flex-col justify-center px-8 bg-white hidden">
                 <div class="mb-10 text-center"><div class="w-20 h-20 bg-teal-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-glow"><i class="fa-solid fa-wallet text-4xl text-white"></i></div><h1 class="text-2xl font-bold text-slate-800 mb-2">随手记 Cloud</h1><p class="text-gray-400 text-sm">登录以同步您的数据</p></div>
-                <div class="space-y-4"><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-envelope text-gray-400"></i><input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm"></div><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-lock text-gray-400"></i><input type="password" id="login-pass" placeholder="密码 (至少6位)" class="flex-1 bg-transparent outline-none text-sm"></div></div>
+                <div class="space-y-4"><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-envelope text-gray-400"></i><input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm"></div><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-lock text-gray-400"></i><input type="password" id="login-pass" placeholder="密码" class="flex-1 bg-transparent outline-none text-sm"></div></div>
                 <button onclick="handleLogin()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-8 active:scale-95 transition-transform" id="login-btn">登录 / 自动注册</button>
                 <div class="relative my-6"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-100"></div></div><div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-400">或</span></div></div>
                 <button onclick="Auth.loginAsGuest()" class="w-full py-3 bg-white border border-gray-200 text-slate-600 rounded-xl font-bold text-sm transition">游客直接试用</button>
