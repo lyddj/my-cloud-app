@@ -27,23 +27,14 @@
             }
         }
 
-        // --- CONFIGURATION: SUPABASE KEYS INJECTED ---
-        const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
+        // --- SUPABASE KEYS ---
+        const SUPABASE_URL = 'https://kkouqqbpturjuyhchfyc.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtrb3VxcWJwdHVyanV5aGNoZnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5OTg5OTAsImV4cCI6MjA4NTU3NDk5MH0.BHm41jsY_uBxryBBJnnXbpH7Axbv0LTWIx1QhRwo7N0';
         
         let supabaseClient;
-        
         function initSupabase() {
-            try {
-                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    console.log("Supabase client initialized successfully.");
-                } else {
-                    console.error("Supabase library not loaded yet.");
-                }
-            } catch (e) {
-                console.error("Supabase init failed:", e);
-            }
+            try { if (typeof window.supabase !== 'undefined') supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
+            catch (e) { console.error("Supabase init failed:", e); }
         }
     </script>
 
@@ -52,9 +43,9 @@
         body { font-family: 'Noto Sans SC', sans-serif; background-color: #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         #phone-frame { width: 100%; max-width: 414px; height: 100vh; max-height: 896px; background-color: #f8fafc; position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
         @media (min-width: 450px) { #phone-frame { height: 85vh; border-radius: 40px; border: 8px solid #1e293b; } }
-        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; animation: fadeUp 2s ease-in-out forwards; z-index: 100; pointer-events: none; backdrop-filter: blur(4px); width: max-content; }
+        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; animation: fadeUp 2s ease-in-out forwards; z-index: 100; pointer-events: none; }
         @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -30px); } 15% { opacity: 1; transform: translate(-50%, -50%); } 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
         .key-btn { background:white; padding:18px; font-size:20px; font-weight:500; color:#334155; transition: background 0.1s; } 
         .key-btn:active { background:#f1f5f9; }
@@ -80,8 +71,36 @@
             </header>
             <div class="flex-1 overflow-y-auto -mt-8 px-4 pb-24 relative z-20 no-scrollbar">
                 <div id="transaction-list" class="space-y-3 pt-2"></div>
-                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 mt-4 opacity-60"><i class="fa-solid fa-file-invoice text-4xl text-gray-300 mb-2"></i><p class="text-gray-400 text-xs">暂无数据，请先登录或记一笔</p></div>
+                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 mt-4 opacity-60"><i class="fa-solid fa-file-invoice text-4xl text-gray-300 mb-2"></i><p class="text-gray-400 text-xs">暂无数据</p></div>
                 <div id="loading-state" class="flex flex-col items-center justify-center py-10 mt-4 opacity-60"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-teal-500 mb-2"></i><p class="text-gray-400 text-xs">加载数据中...</p></div>
+            </div>
+        </div>
+
+        <!-- VIEW: STATS (New!) -->
+        <div id="view-stats" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden hidden transform translate-x-full transition-transform duration-300">
+            <div class="pt-12 px-6 pb-4 bg-white shadow-sm z-10">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">收支分析</h2>
+                <div class="bg-gray-100 p-1 rounded-xl flex">
+                    <button onclick="state.statsType='expense'; renderCharts()" id="st-btn-exp" class="flex-1 py-2 rounded-lg text-xs font-bold bg-white shadow-sm transition">支出</button>
+                    <button onclick="state.statsType='income'; renderCharts()" id="st-btn-inc" class="flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 transition">收入</button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto px-4 pb-24 no-scrollbar">
+                <!-- Pie Chart -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm mt-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 border-l-4 border-teal-500 pl-2">分类占比</h3>
+                    <div class="h-48 relative"><canvas id="chart-pie"></canvas></div>
+                </div>
+                <!-- Line Chart -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm mt-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 border-l-4 border-teal-500 pl-2">每日趋势</h3>
+                    <div class="h-40 relative"><canvas id="chart-line"></canvas></div>
+                </div>
+                <!-- Ranking -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm mt-4 mb-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 border-l-4 border-teal-500 pl-2">排行榜</h3>
+                    <div id="stats-ranking" class="space-y-4"></div>
+                </div>
             </div>
         </div>
 
@@ -109,7 +128,6 @@
 
         <!-- VIEW: MINE -->
         <div id="view-mine" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden hidden transform translate-x-full transition-transform duration-300">
-            <!-- PROFILE -->
             <div id="profile-view" class="h-full flex flex-col hidden">
                 <div class="pt-16 pb-16 px-6 bg-gradient-to-br from-teal-50 to-white relative">
                     <div class="flex items-center gap-4 relative z-10">
@@ -119,124 +137,28 @@
                 </div>
                 <div class="p-6"><button onclick="handleLogout()" class="w-full py-3 bg-red-50 text-red-500 rounded-xl font-bold text-sm hover:bg-red-100 transition">退出登录</button></div>
             </div>
-            <!-- LOGIN -->
             <div id="login-view" class="h-full flex flex-col justify-center px-8 bg-white hidden">
-                <div class="mb-10 text-center">
-                    <div class="w-20 h-20 bg-teal-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-glow"><i class="fa-solid fa-wallet text-4xl text-white"></i></div>
-                    <h1 class="text-2xl font-bold text-slate-800 mb-2">随手记 Cloud</h1>
-                    <p class="text-gray-400 text-sm">登录以同步您的数据</p>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-envelope text-gray-400"></i><input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm"></div>
-                    <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-lock text-gray-400"></i><input type="password" id="login-pass" placeholder="密码 (至少6位)" class="flex-1 bg-transparent outline-none text-sm"></div>
-                </div>
+                <div class="mb-10 text-center"><div class="w-20 h-20 bg-teal-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-glow"><i class="fa-solid fa-wallet text-4xl text-white"></i></div><h1 class="text-2xl font-bold text-slate-800 mb-2">随手记 Cloud</h1><p class="text-gray-400 text-sm">登录以同步您的数据</p></div>
+                <div class="space-y-4"><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-envelope text-gray-400"></i><input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm"></div><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-lock text-gray-400"></i><input type="password" id="login-pass" placeholder="密码" class="flex-1 bg-transparent outline-none text-sm"></div></div>
                 <button onclick="handleLogin()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-8 active:scale-95 transition-transform" id="login-btn">登录 / 注册</button>
-                <p class="text-xs text-center text-gray-400 mt-4">新用户输入账号密码后点击按钮自动注册</p>
             </div>
         </div>
 
         <!-- NAV -->
-        <nav class="absolute bottom-0 w-full glass-nav border-t border-gray-100 flex justify-between items-end px-12 h-20 pb-5 z-30">
-            <button onclick="switchView('bill')" class="nav-item text-teal-600 flex flex-col items-center" data-target="bill"><i class="fa-solid fa-file-invoice text-xl mb-1"></i><span class="text-[10px] font-bold">账单</span></button>
-            <div class="relative -top-5"><button onclick="openAddModal()" class="w-14 h-14 bg-teal-500 rounded-2xl text-white shadow-glow flex items-center justify-center transform transition active:scale-90 hover:-translate-y-1 rotate-45"><i class="fa-solid fa-plus text-2xl -rotate-45"></i></button></div>
-            <button onclick="switchView('assets')" class="nav-item text-gray-300 flex flex-col items-center" data-target="assets"><i class="fa-solid fa-wallet text-xl mb-1"></i><span class="text-[10px] font-bold">资产</span></button>
-            <button onclick="switchView('mine')" class="nav-item text-gray-300 flex flex-col items-center" data-target="mine"><i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px] font-bold">我的</span></button>
+        <nav class="absolute bottom-0 w-full glass-nav border-t border-gray-100 grid grid-cols-5 items-end h-20 pb-5 z-30">
+            <button onclick="switchView('bill')" class="nav-item text-teal-600 flex flex-col items-center justify-center" data-target="bill"><i class="fa-solid fa-file-invoice text-xl mb-1"></i><span class="text-[10px] font-bold">账单</span></button>
+            <button onclick="switchView('stats')" class="nav-item text-gray-300 flex flex-col items-center justify-center" data-target="stats"><i class="fa-solid fa-chart-pie text-xl mb-1"></i><span class="text-[10px] font-bold">统计</span></button>
+            <div class="flex justify-center relative -top-5"><button onclick="openAddModal()" class="w-14 h-14 bg-teal-500 rounded-2xl text-white shadow-glow flex items-center justify-center transform transition active:scale-90 hover:-translate-y-1 rotate-45"><i class="fa-solid fa-plus text-2xl -rotate-45"></i></button></div>
+            <button onclick="switchView('assets')" class="nav-item text-gray-300 flex flex-col items-center justify-center" data-target="assets"><i class="fa-solid fa-wallet text-xl mb-1"></i><span class="text-[10px] font-bold">资产</span></button>
+            <button onclick="switchView('mine')" class="nav-item text-gray-300 flex flex-col items-center justify-center" data-target="mine"><i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px] font-bold">我的</span></button>
         </nav>
 
-        <!-- ADD TRANSACTION MODAL -->
-        <div id="add-modal" class="absolute inset-0 z-50 hidden flex flex-col justify-end">
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity" id="add-backdrop" onclick="closeAddModal()"></div>
-            <div class="relative bg-white rounded-t-3xl shadow-2xl h-[85%] flex flex-col translate-y-full transition-transform" id="add-panel">
-                <div class="w-full flex justify-center pt-3 pb-1" onclick="closeAddModal()"><div class="w-10 h-1 bg-gray-200 rounded-full"></div></div>
-                <!-- Tabs -->
-                <div class="px-6 py-2 flex justify-center">
-                    <div class="bg-gray-100 p-1 rounded-xl flex w-full max-w-[200px]">
-                        <button onclick="setAddType('expense')" id="btn-expense" class="flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all">支出</button>
-                        <button onclick="setAddType('income')" id="btn-income" class="flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all">收入</button>
-                    </div>
-                </div>
-                <!-- Amount & Asset Pill -->
-                <div class="px-6 py-4 flex flex-col items-end border-b border-gray-50">
-                    <div class="flex items-center justify-between w-full mb-2">
-                        <!-- ASSET PILL: Click to switch grid mode -->
-                        <div onclick="toggleGridMode()" id="asset-pill" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full cursor-pointer transition active:scale-95 border border-transparent hover:border-blue-200">
-                            <i class="fa-solid fa-wallet text-xs" id="asset-pill-icon"></i>
-                            <span class="text-xs font-bold" id="asset-pill-name">选择账户</span>
-                            <i class="fa-solid fa-chevron-down text-[10px] opacity-60"></i>
-                        </div>
-                        <input type="text" id="trans-note" placeholder="写点备注..." class="text-right text-xs bg-transparent outline-none w-32">
-                    </div>
-                    <div class="flex items-baseline gap-1 text-slate-800"><span class="text-2xl font-bold">¥</span><div class="text-5xl font-bold tracking-tighter" id="display-amount">0</div></div>
-                </div>
-                <!-- Grid Area -->
-                <div class="flex-1 overflow-y-auto px-2 pb-2 relative bg-gray-50/50">
-                    <div class="text-xs text-gray-400 font-bold px-4 py-2 sticky top-0 bg-gray-50/95 z-10 flex justify-between backdrop-blur-sm shadow-sm border-b border-gray-100"><span id="grid-title">选择分类</span></div>
-                    <div class="grid grid-cols-5 gap-y-4 gap-x-1 pt-4 pb-4" id="category-grid"></div>
-                </div>
-                <!-- Keypad -->
-                <div class="bg-gray-50 pb-6 border-t border-gray-100">
-                    <div class="grid grid-cols-4 gap-[1px] bg-gray-200 shadow-inner">
-                        <button class="key-btn" onclick="appendNumber('7')">7</button><button class="key-btn" onclick="appendNumber('8')">8</button><button class="key-btn" onclick="appendNumber('9')">9</button><button class="key-btn text-sm" onclick="updateDateDisplay()">今天</button>
-                        <button class="key-btn" onclick="appendNumber('4')">4</button><button class="key-btn" onclick="appendNumber('5')">5</button><button class="key-btn" onclick="appendNumber('6')">6</button><button class="key-btn text-teal-500" onclick="appendNumber('+')">+</button>
-                        <button class="key-btn" onclick="appendNumber('1')">1</button><button class="key-btn" onclick="appendNumber('2')">2</button><button class="key-btn" onclick="appendNumber('3')">3</button><button class="key-btn text-teal-500" onclick="appendNumber('-')">-</button>
-                        <button class="key-btn" onclick="appendNumber('.')">.</button><button class="key-btn" onclick="appendNumber('0')">0</button><button class="key-btn text-slate-400" onclick="deleteNumber()">del</button><button class="bg-teal-600 text-white font-bold text-lg active:bg-teal-700" onclick="submitTransaction()">完成</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- ADD MODAL -->
+        <div id="add-modal" class="absolute inset-0 z-50 hidden flex flex-col justify-end"><div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity" id="add-backdrop" onclick="closeAddModal()"></div><div class="relative bg-white rounded-t-3xl shadow-2xl h-[85%] flex flex-col translate-y-full transition-transform" id="add-panel"><div class="w-full flex justify-center pt-3 pb-1" onclick="closeAddModal()"><div class="w-10 h-1 bg-gray-200 rounded-full"></div></div><div class="px-6 py-2 flex justify-center"><div class="bg-gray-100 p-1 rounded-xl flex w-full max-w-[200px]"><button onclick="setAddType('expense')" id="btn-expense" class="flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all">支出</button><button onclick="setAddType('income')" id="btn-income" class="flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all">收入</button></div></div><div class="px-6 py-4 flex flex-col items-end border-b border-gray-50"><div class="flex items-center justify-between w-full mb-2"><div onclick="toggleGridMode()" id="asset-pill" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full cursor-pointer transition active:scale-95"><i class="fa-solid fa-wallet text-xs" id="asset-pill-icon"></i><span class="text-xs font-bold" id="asset-pill-name">选择账户</span></div><input type="text" id="trans-note" placeholder="写点备注..." class="text-right text-xs bg-transparent outline-none w-32"></div><div class="flex items-baseline gap-1 text-slate-800"><span class="text-2xl font-bold">¥</span><div class="text-5xl font-bold tracking-tighter" id="display-amount">0</div></div></div><div class="flex-1 overflow-y-auto px-2 pb-2 relative bg-gray-50/50"><div class="text-xs text-gray-400 font-bold px-4 py-2 sticky top-0 bg-gray-50/95 z-10 flex justify-between backdrop-blur-sm"><span id="grid-title">选择分类</span></div><div class="grid grid-cols-5 gap-y-4 gap-x-1 pt-4 pb-4" id="category-grid"></div></div><div class="bg-gray-50 pb-6 border-t border-gray-100"><div class="grid grid-cols-4 gap-[1px] bg-gray-200 shadow-inner"><button class="key-btn" onclick="appendNumber('7')">7</button><button class="key-btn" onclick="appendNumber('8')">8</button><button class="key-btn" onclick="appendNumber('9')">9</button><button class="key-btn text-sm" onclick="updateDateDisplay()">今天</button><button class="key-btn" onclick="appendNumber('4')">4</button><button class="key-btn" onclick="appendNumber('5')">5</button><button class="key-btn" onclick="appendNumber('6')">6</button><button class="key-btn text-teal-500" onclick="appendNumber('+')">+</button><button class="key-btn" onclick="appendNumber('1')">1</button><button class="key-btn" onclick="appendNumber('2')">2</button><button class="key-btn" onclick="appendNumber('3')">3</button><button class="key-btn text-teal-500" onclick="appendNumber('-')">-</button><button class="key-btn" onclick="appendNumber('.')">.</button><button class="key-btn" onclick="appendNumber('0')">0</button><button class="key-btn text-slate-400" onclick="deleteNumber()">del</button><button class="bg-teal-600 text-white font-bold text-lg" onclick="submitTransaction()">完成</button></div></div></div></div>
         
-        <!-- ASSET MANAGER LIST (MODAL) -->
-        <div id="asset-manage-modal" class="absolute inset-0 z-50 hidden flex flex-col justify-end">
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" id="asset-manage-backdrop" onclick="closeAssetManager()"></div>
-            <div class="relative bg-white rounded-t-3xl shadow-2xl w-full h-[85%] flex flex-col transition-transform duration-300 translate-y-full" id="asset-manage-panel">
-                <div class="w-full flex justify-center pt-3 pb-1"><div class="w-10 h-1 bg-gray-200 rounded-full"></div></div>
-                <div class="px-6 py-3 flex justify-between items-center border-b border-gray-100">
-                    <h3 class="text-lg font-bold text-slate-800">资产管理</h3>
-                    <button onclick="closeAssetManager()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid fa-times"></i></button>
-                </div>
-                <div class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar" id="asset-manage-list"></div>
-                <div class="p-6 border-t border-gray-100 bg-white"><button onclick="openAssetForm()" class="w-full py-3.5 bg-teal-50 text-teal-600 rounded-xl font-bold text-sm hover:bg-teal-100 transition flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> 添加新账户</button></div>
-            </div>
-        </div>
-
-        <!-- ASSET EDIT/ADD FORM (NESTED MODAL) -->
-        <div id="asset-form-modal" class="absolute inset-0 z-[60] hidden flex flex-col justify-end">
-            <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closeAssetForm()"></div>
-            <div class="relative bg-white rounded-t-3xl h-auto flex flex-col transition-transform translate-y-full duration-300" id="asset-form-panel">
-                <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100">
-                    <button onclick="closeAssetForm()" class="text-gray-500 text-sm">取消</button>
-                    <h3 class="font-bold text-slate-800" id="asset-form-title">添加账户</h3>
-                    <button onclick="saveAssetForm()" class="text-teal-600 font-bold text-sm">保存</button>
-                </div>
-                <div class="p-6 space-y-5 pb-10">
-                    <!-- Icon Selector -->
-                    <div>
-                        <label class="text-xs text-gray-400 font-bold mb-3 block">选择图标</label>
-                        <div class="grid grid-cols-5 gap-4" id="af-icon-grid"></div>
-                    </div>
-                    <!-- Inputs -->
-                    <div class="space-y-3">
-                        <div>
-                            <label class="text-xs text-gray-400 font-bold ml-1">账户名称</label>
-                            <input id="af-name" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="如: 私房钱">
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="flex-1">
-                                <label class="text-xs text-gray-400 font-bold ml-1">当前余额</label>
-                                <input id="af-balance" type="number" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="0.00">
-                            </div>
-                            <div class="flex-1">
-                                <label class="text-xs text-gray-400 font-bold ml-1">类型</label>
-                                <div class="flex bg-gray-100 p-1 rounded-xl mt-1 h-[46px]">
-                                    <button onclick="setAssetFormType('asset')" id="af-type-asset" class="flex-1 rounded-lg text-xs font-bold transition">资产</button>
-                                    <button onclick="setAssetFormType('liability')" id="af-type-liability" class="flex-1 rounded-lg text-xs font-bold transition">负债</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- ASSET MODALS -->
+        <div id="asset-manage-modal" class="absolute inset-0 z-50 hidden flex flex-col justify-end"><div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" id="asset-manage-backdrop" onclick="closeAssetManager()"></div><div class="relative bg-white rounded-t-3xl shadow-2xl w-full h-[85%] flex flex-col transition-transform duration-300 translate-y-full" id="asset-manage-panel"><div class="w-full flex justify-center pt-3 pb-1"><div class="w-10 h-1 bg-gray-200 rounded-full"></div></div><div class="px-6 py-3 flex justify-between items-center border-b border-gray-100"><h3 class="text-lg font-bold text-slate-800">资产管理</h3><button onclick="closeAssetManager()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid fa-times"></i></button></div><div class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar" id="asset-manage-list"></div><div class="p-6 border-t border-gray-100 bg-white"><button onclick="openAssetForm()" class="w-full py-3.5 bg-teal-50 text-teal-600 rounded-xl font-bold text-sm hover:bg-teal-100 transition flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> 添加新账户</button></div></div></div>
+        <div id="asset-form-modal" class="absolute inset-0 z-[60] hidden flex flex-col justify-end"><div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closeAssetForm()"></div><div class="relative bg-white rounded-t-3xl h-auto flex flex-col transition-transform translate-y-full duration-300" id="asset-form-panel"><div class="px-6 py-4 flex justify-between items-center border-b border-gray-100"><button onclick="closeAssetForm()" class="text-gray-500 text-sm">取消</button><h3 class="font-bold text-slate-800" id="asset-form-title">添加账户</h3><button onclick="saveAssetForm()" class="text-teal-600 font-bold text-sm">保存</button></div><div class="p-6 space-y-5 pb-10"><div><label class="text-xs text-gray-400 font-bold mb-3 block">选择图标</label><div class="grid grid-cols-5 gap-4" id="af-icon-grid"></div></div><div class="space-y-3"><div><label class="text-xs text-gray-400 font-bold ml-1">账户名称</label><input id="af-name" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="如: 私房钱"></div><div class="flex gap-4"><div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">当前余额</label><input id="af-balance" type="number" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="0.00"></div><div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">类型</label><div class="flex bg-gray-100 p-1 rounded-xl mt-1 h-[46px]"><button onclick="setAssetFormType('asset')" id="af-type-asset" class="flex-1 rounded-lg text-xs font-bold transition">资产</button><button onclick="setAssetFormType('liability')" id="af-type-liability" class="flex-1 rounded-lg text-xs font-bold transition">负债</button></div></div></div></div></div></div></div>
 
     </div>
 
@@ -249,69 +171,32 @@
             view: 'bill', date: new Date(), 
             addType: 'expense', input: '0', 
             selCat: null, selAsset: null, 
-            gridMode: 'cat', // 'cat' or 'asset'
-            editAssetId: null, // For editing
-            tempAssetIcon: null, // For form
-            tempAssetType: 'asset'
+            gridMode: 'cat', editAssetId: null, tempAssetIcon: null, tempAssetType: 'asset',
+            statsType: 'expense' 
         };
+        let chartInstances = {}; // Store charts to destroy them later
         
         const categories = { 
-            expense: [ 
-                {id:'food',name:'餐饮',icon:'fa-utensils',color:'text-orange-500 bg-orange-50'}, 
-                {id:'traffic',name:'交通',icon:'fa-train',color:'text-blue-500 bg-blue-50'}, 
-                {id:'shop',name:'购物',icon:'fa-bag-shopping',color:'text-pink-500 bg-pink-50'}, 
-                {id:'ent',name:'娱乐',icon:'fa-film',color:'text-purple-500 bg-purple-50'},
-                {id:'home',name:'居住',icon:'fa-house',color:'text-teal-500 bg-teal-50'},
-                {id:'med',name:'医疗',icon:'fa-notes-medical',color:'text-red-500 bg-red-50'},
-                {id:'other',name:'其他',icon:'fa-circle-notch',color:'text-gray-500 bg-gray-50'}
-            ],
-            income: [ 
-                {id:'salary',name:'工资',icon:'fa-money-bill',color:'text-green-500 bg-green-50'}, 
-                {id:'part',name:'兼职',icon:'fa-briefcase',color:'text-blue-500 bg-blue-50'},
-                {id:'invest',name:'理财',icon:'fa-chart-line',color:'text-red-500 bg-red-50'}
-            ]
+            expense: [ {id:'food',name:'餐饮',icon:'fa-utensils',color:'text-orange-500'}, {id:'traffic',name:'交通',icon:'fa-train',color:'text-blue-500'}, {id:'shop',name:'购物',icon:'fa-bag-shopping',color:'text-pink-500'}, {id:'ent',name:'娱乐',icon:'fa-film',color:'text-purple-500'}, {id:'home',name:'居住',icon:'fa-house',color:'text-teal-500'}, {id:'med',name:'医疗',icon:'fa-notes-medical',color:'text-red-500'}, {id:'other',name:'其他',icon:'fa-circle-notch',color:'text-gray-500'} ],
+            income: [ {id:'salary',name:'工资',icon:'fa-money-bill',color:'text-green-500'}, {id:'part',name:'兼职',icon:'fa-briefcase',color:'text-blue-500'}, {id:'invest',name:'理财',icon:'fa-chart-line',color:'text-red-500'} ]
         };
-
-        const iconPresets = [
-            { id: 'alipay', icon: 'fa-brands fa-alipay', color: 'text-blue-600', bg: 'bg-blue-50', name: '支付宝' },
-            { id: 'wechat', icon: 'fa-brands fa-weixin', color: 'text-green-600', bg: 'bg-green-50', name: '微信' },
-            { id: 'card', icon: 'fa-solid fa-credit-card', color: 'text-indigo-600', bg: 'bg-indigo-50', name: '银行卡' },
-            { id: 'cash', icon: 'fa-solid fa-wallet', color: 'text-amber-600', bg: 'bg-amber-50', name: '现金' },
-            { id: 'invest', icon: 'fa-solid fa-chart-line', color: 'text-red-600', bg: 'bg-red-50', name: '基金' },
-            { id: 'debt', icon: 'fa-solid fa-file-invoice-dollar', color: 'text-gray-600', bg: 'bg-gray-50', name: '白条' },
-            { id: 'bank', icon: 'fa-solid fa-building-columns', color: 'text-slate-600', bg: 'bg-slate-50', name: '银行' },
-            { id: 'piggy', icon: 'fa-solid fa-piggy-bank', color: 'text-pink-500', bg: 'bg-pink-50', name: '存钱罐' },
-            { id: 'digital', icon: 'fa-brands fa-btc', color: 'text-orange-500', bg: 'bg-orange-50', name: '数字币' },
-            { id: 'other', icon: 'fa-solid fa-shapes', color: 'text-teal-600', bg: 'bg-teal-50', name: '其他' }
-        ];
+        const iconPresets = [ { id: 'alipay', icon: 'fa-brands fa-alipay', color: 'text-blue-600', bg: 'bg-blue-50', name: '支付宝' }, { id: 'wechat', icon: 'fa-brands fa-weixin', color: 'text-green-600', bg: 'bg-green-50', name: '微信' }, { id: 'card', icon: 'fa-solid fa-credit-card', color: 'text-indigo-600', bg: 'bg-indigo-50', name: '银行卡' }, { id: 'cash', icon: 'fa-solid fa-wallet', color: 'text-amber-600', bg: 'bg-amber-50', name: '现金' }, { id: 'invest', icon: 'fa-solid fa-chart-line', color: 'text-red-600', bg: 'bg-red-50', name: '基金' }, { id: 'other', icon: 'fa-solid fa-shapes', color: 'text-teal-600', bg: 'bg-teal-50', name: '其他' } ];
 
         // --- INIT ---
         window.onload = async () => {
             initSupabase();
             if (!supabaseClient) return;
             const { data } = await supabaseClient.auth.getSession();
-            if (data && data.session) {
-                user = data.session.user;
-                await fetchData();
-            } else {
-                switchView('mine');
-            }
+            if (data && data.session) { user = data.session.user; await fetchData(); } else { switchView('mine'); }
         };
 
         async function fetchData() {
             if (!supabaseClient) return;
             document.getElementById('loading-state').classList.remove('hidden');
-            
-            const { data: txs } = await supabaseClient.from('transactions').select('*');
-            transactions = txs || [];
-            
-            const { data: asts } = await supabaseClient.from('assets').select('*');
-            assetAccounts = asts || [];
-            
-            // Set defaults
+            const { data: txs } = await supabaseClient.from('transactions').select('*'); transactions = txs || [];
+            const { data: asts } = await supabaseClient.from('assets').select('*'); assetAccounts = asts || [];
             state.selCat = categories.expense[0];
             state.selAsset = assetAccounts.length > 0 ? assetAccounts[0] : null;
-            
             renderAll();
         }
 
@@ -321,382 +206,161 @@
             if(state.view === 'bill') renderBill();
             else if(state.view === 'assets') renderAssets();
             else if(state.view === 'mine') renderMine();
+            else if(state.view === 'stats') setTimeout(renderCharts, 100);
         }
 
         function renderNav() {
             document.querySelectorAll('.nav-item').forEach(el => {
-                if(el.dataset.target === state.view) {
-                    el.classList.add('text-teal-600');
-                    el.classList.remove('text-gray-300');
-                } else {
-                    el.classList.remove('text-teal-600');
-                    el.classList.add('text-gray-300');
-                }
+                if(el.dataset.target === state.view) { el.classList.add('text-teal-600'); el.classList.remove('text-gray-300'); } 
+                else { el.classList.remove('text-teal-600'); el.classList.add('text-gray-300'); }
             });
         }
 
-        // --- AUTH ---
-        async function handleLogin() {
-            if (!supabaseClient) return showToast('Supabase 未初始化');
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const btn = document.getElementById('login-btn');
-            btn.innerText = "处理中...";
-            
-            let { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-            if (error) {
-                const res = await supabaseClient.auth.signUp({ email, password: pass });
-                if (res.error) { alert(res.error.message); btn.innerText = "登录 / 注册"; return; }
-                data = res.data;
-            }
-            user = data.user;
-            await fetchData();
-            switchView('bill');
-        }
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            user = null; transactions = []; assetAccounts = [];
-            switchView('mine');
+        function switchView(v) { 
+            if (!user && v !== 'mine') v = 'mine';
+            state.view = v; 
+            document.querySelectorAll('.view-page').forEach(e=>e.classList.add('hidden')); 
+            const target = document.getElementById('view-'+v);
+            target.classList.remove('hidden');
+            setTimeout(()=>target.classList.remove('translate-x-full'), 10);
+            renderNav(); // Important fix
+            if(v === 'bill') renderBill();
+            else if(v === 'assets') renderAssets();
+            else if(v === 'mine') renderMine();
+            else if(v === 'stats') setTimeout(renderCharts, 100);
         }
 
-        // --- BILL VIEW ---
+        // --- STATS CHARTS ---
+        function renderCharts() {
+            const btnExp = document.getElementById('st-btn-exp'), btnInc = document.getElementById('st-btn-inc');
+            if(state.statsType==='expense') { btnExp.className="flex-1 py-2 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition"; btnInc.className="flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 transition"; } 
+            else { btnInc.className="flex-1 py-2 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition"; btnExp.className="flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 transition"; }
+
+            const y = state.date.getFullYear(), m = state.date.getMonth();
+            const currTxs = transactions.filter(t => { const d = new Date(t.date); return d.getFullYear()===y && d.getMonth()===m && t.type===state.statsType; });
+
+            // 1. Pie Data
+            const catMap = {}; let total = 0;
+            currTxs.forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + t.amount; total += t.amount; });
+            const sortedCats = Object.keys(catMap).sort((a,b) => catMap[b] - catMap[a]);
+            
+            // 2. Line Data
+            const daysInMonth = new Date(y, m+1, 0).getDate();
+            const dayData = new Array(daysInMonth).fill(0);
+            currTxs.forEach(t => { dayData[new Date(t.date).getDate()-1] += t.amount; });
+
+            // Destroy old charts
+            if(chartInstances.pie) chartInstances.pie.destroy();
+            if(chartInstances.line) chartInstances.line.destroy();
+
+            // Render Pie
+            chartInstances.pie = new Chart(document.getElementById('chart-pie').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: sortedCats.map(c => ([...categories.expense, ...categories.income].find(i=>i.id===c)?.name || c)),
+                    datasets: [{ data: sortedCats.map(c => catMap[c]), backgroundColor: ['#14b8a6', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } }, cutout: '70%' }
+            });
+
+            // Render Line
+            chartInstances.line = new Chart(document.getElementById('chart-line').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: daysInMonth}, (_, i) => i + 1),
+                    datasets: [{ label: state.statsType==='expense'?'支出':'收入', data: dayData, borderColor: state.statsType==='expense'?'#14b8a6':'#f59e0b', tension: 0.4, pointRadius: 2, borderWidth: 2, fill: true, backgroundColor: state.statsType==='expense'?'rgba(20, 184, 166, 0.1)':'rgba(245, 158, 11, 0.1)' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } }, y: { display: false } } }
+            });
+
+            // Render Ranking
+            const rankEl = document.getElementById('stats-ranking'); rankEl.innerHTML = '';
+            if(sortedCats.length === 0) rankEl.innerHTML = '<p class="text-center text-xs text-gray-400 py-4">暂无数据</p>';
+            else sortedCats.forEach(cid => {
+                const amt = catMap[cid], pct = ((amt/total)*100).toFixed(1);
+                const cat = [...categories.expense, ...categories.income].find(c=>c.id===cid) || {name:cid};
+                rankEl.innerHTML += `<div class="flex items-center justify-between text-sm"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-teal-500"></div><span class="text-slate-600">${cat.name}</span></div><div class="flex items-center gap-3"><span class="text-xs text-gray-400">${pct}%</span><span class="font-bold text-slate-700">¥${amt.toFixed(2)}</span></div></div><div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-1"><div class="h-full bg-teal-500" style="width: ${pct}%"></div></div>`;
+            });
+        }
+
+        // --- AUTH & DATA ---
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value, pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('login-btn'); btn.innerText = "处理中...";
+            let { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+            if (error) { const res = await supabaseClient.auth.signUp({ email, password: pass }); if (res.error) { alert(res.error.message); btn.innerText = "登录 / 注册"; return; } data = res.data; }
+            user = data.user; await fetchData(); switchView('bill');
+        }
+        async function handleLogout() { await supabaseClient.auth.signOut(); user = null; transactions = []; assetAccounts = []; switchView('mine'); }
+
+        // --- UI RENDERERS ---
         function renderBill() {
             const list = document.getElementById('transaction-list'); list.innerHTML = '';
             const y = state.date.getFullYear(), m = state.date.getMonth();
             document.getElementById('header-date-display').innerText = `${y}年${m+1}月`;
-            
             const curr = transactions.filter(t => { const d = new Date(t.date); return d.getFullYear()===y && d.getMonth()===m; });
             const exp = curr.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
             const inc = curr.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
             document.getElementById('header-total-expense').innerText = exp.toFixed(2);
             document.getElementById('header-total-income').innerText = inc.toFixed(2);
-
             document.getElementById('empty-state').classList.toggle('hidden', curr.length > 0);
             document.getElementById('loading-state').classList.add('hidden');
-
             curr.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
-                const cat = [...categories.expense, ...categories.income].find(c=>c.id===t.category) || {name:t.category, icon:'fa-question', color:'text-gray-500 bg-gray-100'};
-                // Find asset info
+                const cat = [...categories.expense, ...categories.income].find(c=>c.id===t.category) || {name:t.category, icon:'fa-question', color:'text-gray-500'};
                 const asset = assetAccounts.find(a => a.id === t.asset_id);
-                const assetName = asset ? asset.name : '';
-                
-                list.innerHTML += `<div class="bg-white p-4 rounded-2xl flex items-center gap-4 mb-3 shadow-soft border border-slate-50">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center ${cat.color} text-lg"><i class="fa-solid ${cat.icon}"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-baseline mb-1">
-                            <span class="text-sm font-bold text-slate-800">${cat.name}</span>
-                            <span class="font-bold ${t.type==='expense'?'text-slate-800':'text-teal-600'}">${t.type==='expense'?'-':'+'}${t.amount}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs text-slate-400">
-                            <div class="flex items-center gap-2">
-                                <span>${new Date(t.date).getDate()}日 ${new Date(t.date).getHours()}:${String(new Date(t.date).getMinutes()).padStart(2,'0')}</span>
-                                ${assetName ? `<span class="bg-slate-100 px-1.5 rounded text-slate-500">${assetName}</span>` : ''}
-                            </div>
-                            <span class="truncate max-w-[100px]">${t.note||''}</span>
-                        </div>
-                    </div>
-                </div>`;
+                list.innerHTML += `<div class="bg-white p-4 rounded-2xl flex items-center gap-4 mb-3 shadow-soft border border-slate-50"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 ${cat.color} text-lg"><i class="fa-solid ${cat.icon}"></i></div><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-1"><span class="text-sm font-bold text-slate-800">${cat.name}</span><span class="font-bold ${t.type==='expense'?'text-slate-800':'text-teal-600'}">${t.type==='expense'?'-':'+'}${t.amount}</span></div><div class="flex justify-between items-center text-xs text-slate-400"><div class="flex items-center gap-2"><span>${new Date(t.date).getDate()}日</span>${asset ? `<span class="bg-slate-100 px-1.5 rounded text-slate-500">${asset.name}</span>` : ''}</div><span class="truncate max-w-[100px]">${t.note||''}</span></div></div></div>`;
             });
         }
-
-        // --- ASSETS VIEW ---
         function renderAssets() {
             const list = document.getElementById('asset-list-container'); list.innerHTML = '';
             let net = 0, totA = 0, totL = 0;
-            
             assetAccounts.forEach(a => {
-                const val = parseFloat(a.balance);
-                if(a.type === 'asset') totA += val; else totL += val;
-                
-                // Match icon style from presets or DB
-                const preset = iconPresets.find(p => p.icon === a.icon) || iconPresets.find(p => p.id === 'cash');
-                const iconClass = a.icon || preset.icon;
-                const colorClass = a.color || preset.color;
-                const bgClass = preset.bg; // Use preset bg for simplicity
-
-                list.innerHTML += `<div class="flex items-center p-4 bg-white rounded-2xl shadow-soft border border-slate-50 mb-3 cursor-pointer active:scale-[0.98] transition" onclick="openAssetForm('${a.id}')">
-                    <div class="w-12 h-12 rounded-full ${bgClass} flex items-center justify-center ${colorClass} text-xl mr-4"><i class="${iconClass}"></i></div>
-                    <div class="flex-1">
-                        <div class="font-bold text-slate-700 text-sm">${a.name}</div>
-                        <div class="text-xs text-gray-400 mt-0.5">${a.type==='asset'?'资产':'负债'}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-slate-800">¥${val.toFixed(2)}</div>
-                        <div class="text-[10px] text-gray-300"><i class="fa-solid fa-pen"></i></div>
-                    </div>
-                </div>`;
+                if(a.type === 'asset') totA += a.balance; else totL += a.balance;
+                const preset = iconPresets.find(p => p.icon === a.icon) || iconPresets[3];
+                list.innerHTML += `<div class="flex items-center p-4 bg-white rounded-2xl shadow-soft border border-slate-50 mb-3 cursor-pointer active:scale-[0.98] transition" onclick="openAssetForm('${a.id}')"><div class="w-12 h-12 rounded-full ${preset.bg} flex items-center justify-center ${preset.color} text-xl mr-4"><i class="${a.icon||'fa-solid fa-wallet'}"></i></div><div class="flex-1"><div class="font-bold text-slate-700 text-sm">${a.name}</div><div class="text-xs text-gray-400 mt-0.5">${a.type==='asset'?'资产':'负债'}</div></div><div class="text-right"><div class="font-bold text-slate-800">¥${a.balance.toFixed(2)}</div><div class="text-[10px] text-gray-300"><i class="fa-solid fa-pen"></i></div></div></div>`;
             });
-            
-            net = totA - totL;
-            document.getElementById('asset-net-total').innerText = net.toFixed(2);
-            document.getElementById('asset-total-assets').innerText = totA.toFixed(2);
-            document.getElementById('asset-total-liabilities').innerText = totL.toFixed(2);
-        }
-
-        // --- ADD TRANSACTION MODAL LOGIC ---
-        function openAddModal() { 
-            if(!user) return showToast('请先登录'); 
-            document.getElementById('add-modal').classList.remove('hidden'); 
-            document.getElementById('add-backdrop').classList.remove('opacity-0');
-            setTimeout(()=>document.getElementById('add-panel').classList.remove('translate-y-full'),10); 
-            state.input='0'; 
-            state.gridMode = 'cat'; // Reset to category selection
-            updateDisplay(); 
-            setupGrid();
-            updatePillUI();
-        }
-        function closeAddModal() { 
-            document.getElementById('add-panel').classList.add('translate-y-full'); 
-            document.getElementById('add-backdrop').classList.add('opacity-0');
-            setTimeout(()=>document.getElementById('add-modal').classList.add('hidden'),300); 
-        }
-        function setAddType(t) { 
-            state.addType=t; 
-            const btnExp = document.getElementById('btn-expense');
-            const btnInc = document.getElementById('btn-income');
-            if(t==='expense') {
-                btnExp.className = "flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all text-slate-800";
-                btnInc.className = "flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all";
-            } else {
-                btnInc.className = "flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all text-slate-800";
-                btnExp.className = "flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all";
-            }
-            state.selCat = state.addType==='expense' ? categories.expense[0] : categories.income[0]; // Reset cat
-            state.gridMode = 'cat'; // Always show cat first when switching type
-            setupGrid();
-        }
-        function toggleGridMode() { 
-            state.gridMode = state.gridMode==='cat'?'asset':'cat'; 
-            setupGrid(); 
-        }
-        function setupGrid() {
-            const grid = document.getElementById('category-grid'); 
-            const title = document.getElementById('grid-title');
-            grid.innerHTML = '';
-            
-            if(state.gridMode === 'cat') {
-                title.innerText = '选择分类';
-                const cats = state.addType==='expense'?categories.expense:categories.income;
-                cats.forEach(c => {
-                    const isSel = state.selCat && state.selCat.id === c.id;
-                    const bg = isSel ? 'bg-slate-800 text-white shadow-lg scale-105' : 'bg-white text-slate-500 shadow-sm';
-                    grid.innerHTML += `<div class="flex flex-col items-center gap-2 transition-all duration-200" onclick="selectCat('${c.id}')">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg ${bg} transition-all"><i class="fa-solid ${c.icon}"></i></div>
-                        <span class="text-[10px] font-medium text-slate-500">${c.name}</span>
-                    </div>`;
-                });
-            } else {
-                title.innerText = '选择关联账户';
-                // Add a "None" option maybe? For now list all assets
-                assetAccounts.forEach(a => {
-                    const isSel = state.selAsset && state.selAsset.id === a.id;
-                    const preset = iconPresets.find(p => p.icon === a.icon) || iconPresets[0];
-                    // Selected state styling
-                    const ring = isSel ? 'ring-2 ring-offset-2 ring-blue-500' : '';
-                    
-                    grid.innerHTML += `<div class="flex flex-col items-center gap-2 transition-all duration-200" onclick="selectAsset('${a.id}')">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg ${preset.bg} ${preset.color} ${ring} transition-all"><i class="${a.icon||'fa-solid fa-wallet'}"></i></div>
-                        <span class="text-[10px] font-medium text-slate-500 truncate max-w-[60px]">${a.name}</span>
-                    </div>`;
-                });
-            }
-        }
-        function selectCat(id) {
-            const list = state.addType==='expense'?categories.expense:categories.income;
-            state.selCat = list.find(c=>c.id===id);
-            setupGrid(); // Re-render to highlight
-        }
-        function selectAsset(id) {
-            state.selAsset = assetAccounts.find(a=>a.id===id);
-            toggleGridMode(); // Switch back to cat view automatically
-            updatePillUI();
-        }
-        function updatePillUI() {
-            const pill = document.getElementById('asset-pill');
-            const name = document.getElementById('asset-pill-name');
-            const icon = document.getElementById('asset-pill-icon');
-            
-            if(state.selAsset) {
-                const preset = iconPresets.find(p => p.icon === state.selAsset.icon) || iconPresets[0];
-                name.innerText = state.selAsset.name;
-                icon.className = state.selAsset.icon || 'fa-solid fa-wallet';
-                pill.className = `flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-100 text-blue-600 rounded-full cursor-pointer transition active:scale-95 shadow-sm`;
-            } else {
-                name.innerText = '选择账户';
-                pill.className = `flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 rounded-full cursor-pointer transition active:scale-95`;
-            }
-        }
-        async function submitTransaction() {
-            if (!supabaseClient) return;
-            const val = parseFloat(state.input); if(!val) return showToast('请输入金额');
-            if(!state.selCat) return showToast('请选择分类');
-            
-            const btn = document.querySelector('button[onclick="submitTransaction()"]');
-            const oldText = btn.innerText;
-            btn.innerText = '...';
-            
-            const tx = { 
-                user_id: user.id, 
-                amount: val, 
-                type: state.addType, 
-                category: state.selCat.id, 
-                asset_id: state.selAsset?.id, // Linkage
-                date: new Date().toISOString(), 
-                note: document.getElementById('trans-note').value 
-            };
-            
-            await supabaseClient.from('transactions').insert([tx]);
-            
-            // Asset linkage update
-            if(state.selAsset) {
-                let newBal = parseFloat(state.selAsset.balance);
-                if(state.addType === 'expense') newBal -= val; else newBal += val;
-                await supabaseClient.from('assets').update({ balance: newBal }).eq('id', state.selAsset.id);
-            }
-            
-            btn.innerText = oldText;
-            closeAddModal(); 
-            await fetchData();
-            showToast('记账成功');
-        }
-
-        // --- ASSET MANAGEMENT LOGIC ---
-        function openAssetManager() { 
-            // In mobile view, the asset list IS the manager main view. 
-            // But if we want a separate modal list, we can use it.
-            // Current requirement: "Support modify".
-            // We use the ASSET EDIT/ADD FORM directly from the list item click.
-            // The "pen" icon on top right of Asset View opens the Add Modal.
-            openAssetForm(null);
-        }
-        
-        function openAssetForm(id=null) {
-            state.editAssetId = id;
-            const modal = document.getElementById('asset-form-modal');
-            const panel = document.getElementById('asset-form-panel');
-            const title = document.getElementById('asset-form-title');
-            
-            if (id) { 
-                const acc = assetAccounts.find(a => a.id === id); 
-                title.innerText = '编辑账户'; 
-                document.getElementById('af-name').value = acc.name; 
-                document.getElementById('af-balance').value = acc.balance; 
-                state.tempAssetType = acc.type;
-                // Find icon preset
-                const p = iconPresets.find(i => i.icon === acc.icon) || iconPresets[0];
-                state.tempAssetIcon = p;
-            } else { 
-                title.innerText = '添加账户'; 
-                document.getElementById('af-name').value = ''; 
-                document.getElementById('af-balance').value = ''; 
-                state.tempAssetIcon = iconPresets[0]; 
-                state.tempAssetType = 'asset'; 
-            }
-            
-            updateAssetFormUI(); 
-            renderAssetIconGrid();
-            
-            modal.classList.remove('hidden'); 
-            setTimeout(() => panel.classList.remove('translate-y-full'), 10);
-        }
-        
-        function closeAssetForm() { 
-            document.getElementById('asset-form-panel').classList.add('translate-y-full'); 
-            setTimeout(() => document.getElementById('asset-form-modal').classList.add('hidden'), 300); 
-        }
-        
-        function setAssetFormType(type) { 
-            state.tempAssetType = type; 
-            updateAssetFormUI(); 
-        }
-        
-        function updateAssetFormUI() { 
-            const tAsset = document.getElementById('af-type-asset'); 
-            const tLiab = document.getElementById('af-type-liability'); 
-            
-            if (state.tempAssetType === 'asset') { 
-                tAsset.className = 'flex-1 py-2.5 rounded-lg bg-white shadow text-teal-700 font-bold text-xs transition border border-teal-100'; 
-                tLiab.className = 'flex-1 py-2.5 rounded-lg text-gray-400 font-medium text-xs transition hover:bg-gray-200'; 
-            } else { 
-                tAsset.className = 'flex-1 py-2.5 rounded-lg text-gray-400 font-medium text-xs transition hover:bg-gray-200'; 
-                tLiab.className = 'flex-1 py-2.5 rounded-lg bg-white shadow text-red-600 font-bold text-xs transition border border-red-100'; 
-            } 
-        }
-        
-        function renderAssetIconGrid() { 
-            const grid = document.getElementById('af-icon-grid'); 
-            grid.innerHTML = ''; 
-            iconPresets.forEach(p => { 
-                const isActive = p.id === state.tempAssetIcon.id; 
-                const ring = isActive ? 'ring-2 ring-offset-2 ring-slate-800 scale-110' : 'opacity-60 grayscale';
-                
-                const el = document.createElement('div'); 
-                el.className = `flex flex-col items-center gap-1 cursor-pointer transition-all duration-200`;
-                el.innerHTML = `
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${p.bg} ${p.color} ${ring} transition-all"><i class="${p.icon}"></i></div>
-                    <span class="text-[10px] text-slate-500 font-medium">${p.name}</span>
-                `; 
-                el.onclick = () => { state.tempAssetIcon = p; renderAssetIconGrid(); }; 
-                grid.appendChild(el); 
-            }); 
-        }
-        
-        async function saveAssetForm() {
-            if (!supabaseClient) return;
-            const name = document.getElementById('af-name').value;
-            if(!name) return showToast('请输入名称');
-            const bal = parseFloat(document.getElementById('af-balance').value)||0;
-            
-            // Build object including ICON and COLOR
-            const payload = { 
-                user_id: user.id, 
-                name, 
-                balance: bal, 
-                type: state.tempAssetType, 
-                icon: state.tempAssetIcon.icon, // Saving full icon class
-                color: state.tempAssetIcon.color 
-            };
-            
-            if (state.editAssetId) {
-                // Update
-                await supabaseClient.from('assets').update(payload).eq('id', state.editAssetId);
-                showToast('已修改');
-            } else {
-                // Insert
-                await supabaseClient.from('assets').insert([payload]);
-                showToast('已添加');
-            }
-            
-            closeAssetForm(); 
-            await fetchData(); 
-        }
-
-        // --- UTILS ---
-        function switchView(v) { 
-            state.view = v; renderNav(); 
-            document.querySelectorAll('.view-page').forEach(e=> {
-                if(e.id === `view-${v}`) {
-                    e.classList.remove('hidden');
-                    setTimeout(()=>e.classList.remove('translate-x-full'), 10);
-                } else {
-                    e.classList.add('hidden'); // Hide others immediately for simplicity
-                    e.classList.add('translate-x-full');
-                }
-            });
-            if(v === 'bill') renderBill();
-            else if(v === 'assets') renderAssets();
-            else if(v === 'mine') renderMine();
+            net = totA - totL; document.getElementById('asset-net-total').innerText = net.toFixed(2); document.getElementById('asset-total-assets').innerText = totA.toFixed(2); document.getElementById('asset-total-liabilities').innerText = totL.toFixed(2);
         }
         function renderMine() { 
             document.getElementById('profile-view').classList.toggle('hidden', !user); 
             document.getElementById('login-view').classList.toggle('hidden', !!user);
             if(user) document.getElementById('profile-email').innerText = user.email.split('@')[0];
         }
+
+        // --- MODAL & FORM LOGIC ---
+        function openAddModal() { if(!user) return showToast('请先登录'); document.getElementById('add-modal').classList.remove('hidden'); document.getElementById('add-backdrop').classList.remove('opacity-0'); setTimeout(()=>document.getElementById('add-panel').classList.remove('translate-y-full'),10); state.input='0'; state.gridMode = 'cat'; updateDisplay(); setupGrid(); updatePillUI(); }
+        function closeAddModal() { document.getElementById('add-panel').classList.add('translate-y-full'); document.getElementById('add-backdrop').classList.add('opacity-0'); setTimeout(()=>document.getElementById('add-modal').classList.add('hidden'),300); }
+        function setAddType(t) { state.addType=t; document.getElementById('btn-expense').className = t==='expense'?'flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all text-slate-800':'flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all'; document.getElementById('btn-income').className = t==='income'?'flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all text-slate-800':'flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all'; state.selCat = state.addType==='expense'?categories.expense[0]:categories.income[0]; state.gridMode='cat'; setupGrid(); }
+        function toggleGridMode() { state.gridMode = state.gridMode==='cat'?'asset':'cat'; setupGrid(); }
+        function setupGrid() {
+            const grid = document.getElementById('category-grid'), title = document.getElementById('grid-title'); grid.innerHTML = '';
+            if(state.gridMode === 'cat') { title.innerText = '选择分类'; (state.addType==='expense'?categories.expense:categories.income).forEach(c => { const isSel = state.selCat && state.selCat.id === c.id; grid.innerHTML += `<div class="flex flex-col items-center gap-2 transition-all" onclick="state.selCat={id:'${c.id}',name:'${c.name}'}; setupGrid();"><div class="w-12 h-12 rounded-full flex items-center justify-center text-lg ${isSel?'bg-slate-800 text-white shadow-lg':'bg-white text-slate-500 shadow-sm'}"><i class="fa-solid ${c.icon}"></i></div><span class="text-[10px] font-medium text-slate-500">${c.name}</span></div>`; }); } 
+            else { title.innerText = '选择关联账户'; assetAccounts.forEach(a => { const isSel = state.selAsset && state.selAsset.id === a.id; const preset = iconPresets.find(p => p.icon === a.icon) || iconPresets[0]; const ring = isSel ? 'ring-2 ring-offset-2 ring-blue-500' : ''; grid.innerHTML += `<div class="flex flex-col items-center gap-2 transition-all" onclick="state.selAsset={id:'${a.id}',name:'${a.name}',icon:'${a.icon}'}; toggleGridMode(); updatePillUI();"><div class="w-12 h-12 rounded-full flex items-center justify-center text-lg ${preset.bg} ${preset.color} ${ring}"><i class="${a.icon||'fa-solid fa-wallet'}"></i></div><span class="text-[10px] font-medium text-slate-500 truncate max-w-[60px]">${a.name}</span></div>`; }); }
+        }
+        function updatePillUI() { const pill = document.getElementById('asset-pill'); if(state.selAsset) { document.getElementById('asset-pill-name').innerText = state.selAsset.name; document.getElementById('asset-pill-icon').className = state.selAsset.icon || 'fa-solid fa-wallet'; pill.className = `flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-100 text-blue-600 rounded-full cursor-pointer transition active:scale-95 shadow-sm`; } else { document.getElementById('asset-pill-name').innerText = '选择账户'; pill.className = `flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 rounded-full cursor-pointer transition active:scale-95`; } }
+        async function submitTransaction() {
+            if (!supabaseClient) return; const val = parseFloat(state.input); if(!val) return showToast('请输入金额'); if(!state.selCat) return showToast('请选择分类');
+            const tx = { user_id: user.id, amount: val, type: state.addType, category: state.selCat.id, asset_id: state.selAsset?.id, date: new Date().toISOString(), note: document.getElementById('trans-note').value };
+            await supabaseClient.from('transactions').insert([tx]);
+            if(state.selAsset) { const asset = assetAccounts.find(a=>a.id===state.selAsset.id); let newBal = parseFloat(asset.balance); if(state.addType === 'expense') newBal -= val; else newBal += val; await supabaseClient.from('assets').update({ balance: newBal }).eq('id', state.selAsset.id); }
+            closeAddModal(); await fetchData(); showToast('记账成功');
+        }
+        
+        // Asset Manager
+        function openAssetManager() { openAssetForm(null); } // Simplified for now
+        function openAssetForm(id=null) { state.editAssetId = id; const modal = document.getElementById('asset-form-modal'); if (id) { const acc = assetAccounts.find(a => a.id === id); document.getElementById('asset-form-title').innerText = '编辑账户'; document.getElementById('af-name').value = acc.name; document.getElementById('af-balance').value = acc.balance; state.tempAssetIcon = { icon: acc.icon, color: acc.color }; state.tempAssetType = acc.type; } else { document.getElementById('asset-form-title').innerText = '添加账户'; document.getElementById('af-name').value = ''; document.getElementById('af-balance').value = ''; state.tempAssetIcon = iconPresets[0]; state.tempAssetType = 'asset'; } updateAssetFormUI(); renderAssetIconGrid(); modal.classList.remove('hidden'); setTimeout(() => document.getElementById('asset-form-panel').classList.remove('translate-y-full'), 10); }
+        function closeAssetForm() { document.getElementById('asset-form-panel').classList.add('translate-y-full'); setTimeout(() => document.getElementById('asset-form-modal').classList.add('hidden'), 300); }
+        function setAssetFormType(type) { state.tempAssetType = type; updateAssetFormUI(); }
+        function updateAssetFormUI() { const tAsset = document.getElementById('af-type-asset'); const tLiab = document.getElementById('af-type-liability'); if (state.tempAssetType === 'asset') { tAsset.className = 'flex-1 py-2.5 rounded-lg bg-white shadow text-teal-700 font-bold text-xs transition border border-teal-100'; tLiab.className = 'flex-1 py-2.5 rounded-lg text-gray-400 font-medium text-xs transition hover:bg-gray-200'; } else { tAsset.className = 'flex-1 py-2.5 rounded-lg text-gray-400 font-medium text-xs transition hover:bg-gray-200'; tLiab.className = 'flex-1 py-2.5 rounded-lg bg-white shadow text-red-600 font-bold text-xs transition border border-red-100'; } }
+        function renderAssetIconGrid() { const grid = document.getElementById('af-icon-grid'); grid.innerHTML = ''; iconPresets.forEach(p => { const isActive = p.icon === state.tempAssetIcon.icon; const el = document.createElement('div'); el.className = `flex flex-col items-center gap-1 cursor-pointer transition-all duration-200`; el.innerHTML = `<div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${p.bg} ${p.color} ${isActive?'ring-2 ring-offset-2 ring-slate-800 scale-110':'opacity-60 grayscale'} transition-all"><i class="${p.icon}"></i></div><span class="text-[10px] text-slate-500 font-medium">${p.name}</span>`; el.onclick = () => { state.tempAssetIcon = p; renderAssetIconGrid(); }; grid.appendChild(el); }); }
+        async function saveAssetForm() { if (!supabaseClient) return; const name = document.getElementById('af-name').value; if(!name) return showToast('请输入名称'); const bal = parseFloat(document.getElementById('af-balance').value)||0; const payload = { user_id: user.id, name, balance: bal, type: state.tempAssetType, icon: state.tempAssetIcon.icon, color: state.tempAssetIcon.color }; if (state.editAssetId) { await supabaseClient.from('assets').update(payload).eq('id', state.editAssetId); showToast('已修改'); } else { await supabaseClient.from('assets').insert([payload]); showToast('已添加'); } closeAssetForm(); await fetchData(); }
+        function closeAssetManager() { document.getElementById('asset-manage-panel').classList.add('translate-y-full'); setTimeout(()=>document.getElementById('asset-manage-modal').classList.add('hidden'),300); }
+
+        // Util
         function appendNumber(n) { if(state.input==='0'&&n!=='.') state.input=''; state.input+=n; updateDisplay(); }
         function deleteNumber() { state.input=state.input.slice(0,-1)||'0'; updateDisplay(); }
         function updateDisplay() { document.getElementById('display-amount').innerText = state.input; }
         function showToast(m) { const t=document.createElement('div'); t.className='toast'; t.innerText=m; document.getElementById('toast-container').appendChild(t); setTimeout(()=>t.remove(),2000); }
-
     </script>
 </body>
 </html>
