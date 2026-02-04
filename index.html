@@ -27,7 +27,7 @@
             }
         }
 
-        // --- 核心配置：已更新为您提供的 Supabase 密钥 ---
+        // --- 核心配置：已更新为您提供的正确密钥 ---
         const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
         
@@ -37,13 +37,9 @@
             try {
                 if (typeof window.supabase !== 'undefined') {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    console.log("Supabase client initialized.");
-                } else {
-                    console.error("Supabase library not loaded.");
+                    console.log("Supabase 连接成功");
                 }
-            } catch (e) {
-                console.error("Supabase init failed:", e);
-            }
+            } catch (e) { console.error("Supabase 初始化失败:", e); }
         }
     </script>
 
@@ -52,9 +48,9 @@
         body { font-family: 'Noto Sans SC', sans-serif; background-color: #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         #phone-frame { width: 100%; max-width: 414px; height: 100vh; max-height: 896px; background-color: #f8fafc; position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
         @media (min-width: 450px) { #phone-frame { height: 85vh; border-radius: 40px; border: 8px solid #1e293b; } }
-        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; animation: fadeUp 2s ease-in-out forwards; z-index: 100; pointer-events: none; backdrop-filter: blur(4px); width: max-content; }
+        .toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; animation: fadeUp 2s ease-in-out forwards; z-index: 100; pointer-events: none; width: max-content; }
         @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -30px); } 15% { opacity: 1; transform: translate(-50%, -50%); } 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
         .key-btn { background:white; padding:18px; font-size:20px; font-weight:500; color:#334155; transition: background 0.1s; } 
         .key-btn:active { background:#f1f5f9; }
@@ -64,7 +60,7 @@
     <div id="phone-frame">
         <div id="toast-container"></div>
 
-        <!-- 页面 1: 账单首页 -->
+        <!-- 视图 1: 账单首页 -->
         <div id="view-bill" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden">
             <header class="bg-gradient-to-br from-teal-500 to-teal-700 text-white pt-12 pb-16 px-6 relative shrink-0 z-10 rounded-b-[2rem] shadow-lg">
                 <div class="relative z-10 flex justify-between items-start mb-6">
@@ -80,12 +76,12 @@
             </header>
             <div class="flex-1 overflow-y-auto -mt-8 px-4 pb-24 relative z-20 no-scrollbar">
                 <div id="transaction-list" class="space-y-3 pt-2"></div>
-                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 mt-4 opacity-60"><i class="fa-solid fa-file-invoice text-4xl text-gray-300 mb-2"></i><p class="text-gray-400 text-xs">暂无数据，请记一笔</p></div>
+                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 mt-4 opacity-60"><i class="fa-solid fa-file-invoice text-4xl text-gray-300 mb-2"></i><p class="text-gray-400 text-xs">暂无数据</p></div>
                 <div id="loading-state" class="flex flex-col items-center justify-center py-10 mt-4 opacity-60"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-teal-500 mb-2"></i><p class="text-gray-400 text-xs">加载数据中...</p></div>
             </div>
         </div>
 
-        <!-- 页面 2: 统计分析 -->
+        <!-- 视图 2: 统计分析 -->
         <div id="view-stats" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden hidden transform translate-x-full transition-transform duration-300">
             <div class="pt-12 px-6 pb-4 bg-white shadow-sm z-10">
                 <h2 class="text-xl font-bold text-slate-800 mb-4">收支分析</h2>
@@ -95,17 +91,14 @@
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto px-4 pb-24 no-scrollbar">
-                <!-- 饼图 -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm mt-4">
                     <h3 class="text-sm font-bold text-slate-700 mb-4 border-l-4 border-teal-500 pl-2">分类占比</h3>
                     <div class="h-48 relative"><canvas id="chart-pie"></canvas></div>
                 </div>
-                <!-- 趋势图 -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm mt-4">
                     <h3 class="text-sm font-bold text-slate-700 mb-4 border-l-4 border-teal-500 pl-2">每日趋势</h3>
                     <div class="h-40 relative"><canvas id="chart-line"></canvas></div>
                 </div>
-                <!-- 排行榜 -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm mt-4 mb-4">
                     <h3 class="text-sm font-bold text-slate-700 mb-4 border-l-4 border-teal-500 pl-2">排行榜</h3>
                     <div id="stats-ranking" class="space-y-4"></div>
@@ -113,7 +106,7 @@
             </div>
         </div>
 
-        <!-- 页面 3: 资产管理 -->
+        <!-- 视图 3: 资产管理 -->
         <div id="view-assets" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden hidden transform translate-x-full transition-transform duration-300">
             <div class="pt-12 px-6 pb-6 bg-slate-50 flex justify-between items-center">
                 <h2 class="text-xl font-bold text-slate-800">我的资产</h2>
@@ -135,9 +128,8 @@
             </div>
         </div>
 
-        <!-- 页面 4: 个人中心/登录 -->
+        <!-- 视图 4: 个人中心/登录 -->
         <div id="view-mine" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden hidden transform translate-x-full transition-transform duration-300">
-            <!-- 个人资料 -->
             <div id="profile-view" class="h-full flex flex-col hidden">
                 <div class="pt-16 pb-16 px-6 bg-gradient-to-br from-teal-50 to-white relative">
                     <div class="flex items-center gap-4 relative z-10">
@@ -147,10 +139,9 @@
                 </div>
                 <div class="p-6"><button onclick="handleLogout()" class="w-full py-3 bg-red-50 text-red-500 rounded-xl font-bold text-sm hover:bg-red-100 transition">退出登录</button></div>
             </div>
-            <!-- 登录表单 -->
             <div id="login-view" class="h-full flex flex-col justify-center px-8 bg-white hidden">
                 <div class="mb-10 text-center"><div class="w-20 h-20 bg-teal-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-glow"><i class="fa-solid fa-wallet text-4xl text-white"></i></div><h1 class="text-2xl font-bold text-slate-800 mb-2">随手记 Cloud</h1><p class="text-gray-400 text-sm">登录以同步您的数据</p></div>
-                <div class="space-y-4"><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-envelope text-gray-400"></i><input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm"></div><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-lock text-gray-400"></i><input type="password" id="login-pass" placeholder="密码 (至少6位)" class="flex-1 bg-transparent outline-none text-sm"></div></div>
+                <div class="space-y-4"><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-envelope text-gray-400"></i><input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm"></div><div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fa-solid fa-lock text-gray-400"></i><input type="password" id="login-pass" placeholder="密码" class="flex-1 bg-transparent outline-none text-sm"></div></div>
                 <button onclick="handleLogin()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-8 active:scale-95 transition-transform" id="login-btn">登录 / 自动注册</button>
                 <div class="relative my-6"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-100"></div></div><div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-400">或</span></div></div>
                 <button onclick="Auth.loginAsGuest()" class="w-full py-3 bg-white border border-gray-200 text-slate-600 rounded-xl font-bold text-sm transition">游客直接试用</button>
@@ -461,7 +452,9 @@
         function updatePillUI() { const pill = document.getElementById('asset-pill'); if(state.selAsset) { document.getElementById('asset-pill-name').innerText = state.selAsset.name; document.getElementById('asset-pill-icon').className = state.selAsset.icon || 'fa-solid fa-wallet'; pill.className = `flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-100 text-blue-600 rounded-full cursor-pointer transition active:scale-95 shadow-sm`; } else { document.getElementById('asset-pill-name').innerText = '选择账户'; pill.className = `flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 rounded-full cursor-pointer transition active:scale-95`; } }
         
         async function submitTransaction() {
+            if (!supabaseClient && !state.isGuest) return;
             const val = parseFloat(state.input); if(!val) return showToast('请输入金额'); if(!state.selCat) return showToast('请选择分类');
+            
             const tx = { user_id: user.id, amount: val, type: state.addType, category: state.selCat.id, asset_id: state.selAsset?.id, date: new Date().toISOString(), note: document.getElementById('trans-note').value };
             
             if(state.isGuest) {
@@ -473,8 +466,11 @@
                 closeAddModal(); renderAll(); showToast('记账成功'); return;
             }
 
-            if (!supabaseClient) return;
-            await supabaseClient.from('transactions').insert([tx]);
+            // Cloud Save: DELETE ID to let DB auto-gen
+            delete tx.id; 
+            const { error } = await supabaseClient.from('transactions').insert([tx]);
+            if(error) { alert('云端保存失败: ' + error.message); return; }
+
             if(state.selAsset) { const asset = assetAccounts.find(a=>a.id===state.selAsset.id); let newBal = parseFloat(asset.balance); if(state.addType === 'expense') newBal -= val; else newBal += val; await supabaseClient.from('assets').update({ balance: newBal }).eq('id', state.selAsset.id); }
             closeAddModal(); await fetchData(); showToast('记账成功');
         }
@@ -523,8 +519,15 @@
             }
 
             if (!supabaseClient) return;
-            if (state.editAssetId) { await supabaseClient.from('assets').update(payload).eq('id', state.editAssetId); showToast('已修改'); } 
-            else { await supabaseClient.from('assets').insert([payload]); showToast('已添加'); } 
+            // Cloud Save: DELETE ID to let DB auto-gen if new
+            if (state.editAssetId) { 
+                await supabaseClient.from('assets').update(payload).eq('id', state.editAssetId); 
+                showToast('已修改'); 
+            } else { 
+                delete payload.id;
+                await supabaseClient.from('assets').insert([payload]); 
+                showToast('已添加'); 
+            } 
             closeAssetForm(); await fetchData(); 
         }
 
