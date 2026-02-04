@@ -45,7 +45,7 @@
             }
         }
 
-        // --- SUPABASE 配置 ---
+        // --- SUPABASE 配置 (使用你提供的 Key) ---
         const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
         
@@ -371,20 +371,29 @@
             },
 
             async add(payload) {
-                const newTx = {
+                // 构造基础数据
+                const txData = {
                     user_id: State.user.id,
-                    ...payload,
-                    id: State.isGuest ? Date.now() : undefined
+                    amount: payload.amount,
+                    type: payload.type,
+                    category: payload.category,
+                    note: payload.note,
+                    date: payload.date
                 };
 
                 if (State.isGuest) {
-                    State.transactions.unshift(newTx);
+                    // [GUEST] 本地模式：必须手动生成 ID
+                    const guestTx = { ...txData, id: Date.now() };
+                    State.transactions.unshift(guestTx);
                     localStorage.setItem('shouji_guest_data', JSON.stringify(State.transactions));
                     Helpers.showToast("已保存 (本地)");
                     Router.refresh();
                     return true;
                 } else {
-                    const { error } = await supabaseClient.from('transactions').insert([newTx]);
+                    // [CLOUD] 云端模式：绝对不能传 ID (关键修复！)
+                    // txData 里面没有 id 字段，这样数据库就会自动生成
+                    const { error } = await supabaseClient.from('transactions').insert([txData]);
+                    
                     if (!error) {
                         Helpers.showToast("已同步云端");
                         this.fetch();
