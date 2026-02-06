@@ -26,7 +26,7 @@
             }
         }
 
-        // --- 核心配置：使用你提供的 dokkfbt... 密钥 ---
+        // --- 核心配置 ---
         const SUPABASE_URL = 'https://dokkfbtuusvmofqlkxal.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRva2tmYnR1dXN2bW9mcWxreGFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMTczNzgsImV4cCI6MjA4NTU5MzM3OH0.jFg3q_clPEIRw6Wtjxgvk2s-bA1df2AM0MRuNMGYfTg';
         
@@ -53,61 +53,64 @@
         @keyframes fadeUp { 0% { opacity: 0; transform: translate(-50%, -30px); } 15% { opacity: 1; transform: translate(-50%, -50%); } 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -70px); } }
         .key-btn { background:white; padding:18px; font-size:20px; font-weight:500; color:#334155; transition: background 0.1s; } 
         .key-btn:active { background:#f1f5f9; }
-        /* Auth Toggle Styles */
-        .auth-tab { @apply flex-1 py-2 text-sm font-bold text-center cursor-pointer transition-colors border-b-2; }
-        .auth-tab.active { @apply border-teal-500 text-teal-600; }
-        .auth-tab.inactive { @apply border-transparent text-gray-400 hover:text-gray-600; }
+        
+        /* Auth Styles */
+        .auth-tab { cursor: pointer; padding: 10px; font-size: 14px; font-weight: bold; text-align: center; flex: 1; transition: all 0.2s; border-bottom: 2px solid transparent; color: #94a3b8; }
+        .auth-tab.active { color: #0d9488; border-bottom-color: #0d9488; }
+        .auth-input-group { background: #f8fafc; border: 1px solid transparent; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+        .auth-input-group:focus-within { border-color: #14b8a6; background: #fff; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
     </style>
 </head>
 <body>
     <div id="phone-frame">
         <div id="toast-container"></div>
 
-        <!-- 页面: 登录/注册 (分离版) -->
+        <!-- 登录/注册页 -->
         <div id="auth-view" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white px-8">
-            <div class="mb-8 text-center">
+            <div class="mb-8 text-center w-full">
                 <div class="w-20 h-20 bg-teal-500 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-glow">
                     <i class="fa-solid fa-cloud text-4xl text-white"></i>
                 </div>
-                <h1 class="text-2xl font-bold text-slate-800 mb-2">随手记 Cloud</h1>
-                <p class="text-gray-400 text-sm">云端同步 · 安全存储</p>
+                <h1 class="text-2xl font-bold text-slate-800 mb-1">随手记 Cloud</h1>
+                <p class="text-gray-400 text-xs">云端同步 · 资产管理</p>
             </div>
 
             <!-- 切换条 -->
             <div class="flex w-full mb-6 border-b border-gray-100">
                 <div id="tab-login" class="auth-tab active" onclick="switchAuthMode('login')">登录账号</div>
-                <div id="tab-signup" class="auth-tab inactive" onclick="switchAuthMode('signup')">注册新用户</div>
+                <div id="tab-signup" class="auth-tab" onclick="switchAuthMode('signup')">注册新用户</div>
             </div>
 
             <!-- 表单 -->
             <div class="w-full space-y-4">
-                <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-transparent focus-within:border-teal-500 transition">
+                <div class="auth-input-group">
                     <i class="fa-solid fa-envelope text-gray-400"></i>
-                    <input type="email" id="login-email" placeholder="邮箱" class="flex-1 bg-transparent outline-none text-sm">
+                    <input type="email" id="login-email" placeholder="请输入邮箱" class="flex-1 bg-transparent outline-none text-sm text-slate-700">
                 </div>
-                <div class="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-transparent focus-within:border-teal-500 transition">
+                <div class="auth-input-group">
                     <i class="fa-solid fa-lock text-gray-400"></i>
-                    <input type="password" id="login-pass" placeholder="密码 (至少6位)" class="flex-1 bg-transparent outline-none text-sm">
+                    <input type="password" id="login-pass" placeholder="请输入密码 (至少6位)" class="flex-1 bg-transparent outline-none text-sm text-slate-700">
                 </div>
                 
-                <button onclick="handleAuthSubmit()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2" id="auth-submit-btn">
+                <button onclick="handleAuthSubmit()" class="w-full py-4 bg-teal-600 text-white rounded-xl font-bold text-lg shadow-lg mt-2 active:scale-95 transition-transform flex justify-center items-center" id="auth-submit-btn">
                     <span>立即登录</span>
                 </button>
             </div>
 
+            <!-- 错误信息 -->
+            <div id="auth-error-box" class="w-full mt-4 p-3 bg-red-50 text-red-600 text-xs rounded-lg hidden text-center border border-red-100"></div>
+
             <div class="relative my-8 w-full">
                 <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-100"></div></div>
-                <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-300">或</span></div>
+                <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-300 text-xs">或</span></div>
             </div>
 
-            <button onclick="Auth.loginAsGuest()" class="w-full py-3 bg-white border border-gray-200 text-slate-500 rounded-xl font-bold text-sm transition hover:bg-gray-50">
-                <i class="fa-solid fa-user-secret mr-2"></i>游客直接试用
+            <button onclick="Auth.loginAsGuest()" class="w-full py-3 bg-white border border-gray-200 text-slate-500 rounded-xl font-bold text-sm transition hover:bg-gray-50 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user-secret"></i> 游客离线试用
             </button>
-            
-            <p id="auth-error-msg" class="text-xs text-red-500 mt-4 text-center min-h-[20px]"></p>
         </div>
 
-        <!-- APP 主界面容器 -->
+        <!-- APP 主界面 -->
         <div id="app-container" class="hidden h-full flex flex-col relative">
             <!-- 视图 1: 账单 -->
             <div id="view-bill" class="view-page h-full flex flex-col absolute inset-0 bg-slate-50 overflow-hidden">
@@ -197,62 +200,12 @@
             </nav>
         </div>
 
-        <!-- 记账弹窗 -->
-        <div id="add-modal" class="absolute inset-0 z-50 hidden flex flex-col justify-end">
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity" id="add-backdrop" onclick="closeAddModal()"></div>
-            <div class="relative bg-white rounded-t-3xl shadow-2xl h-[85%] flex flex-col translate-y-full transition-transform" id="add-panel">
-                <div class="w-full flex justify-center pt-3 pb-1" onclick="closeAddModal()"><div class="w-10 h-1 bg-gray-200 rounded-full"></div></div>
-                <div class="px-6 py-2 flex justify-center"><div class="bg-gray-100 p-1 rounded-xl flex w-full max-w-[200px]"><button onclick="setAddType('expense')" id="btn-expense" class="flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all text-slate-800">支出</button><button onclick="setAddType('income')" id="btn-income" class="flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all">收入</button></div></div>
-                <div class="px-6 py-4 flex flex-col items-end border-b border-gray-50">
-                    <div class="flex items-center justify-between w-full mb-2">
-                        <div onclick="toggleGridMode()" id="asset-pill" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full cursor-pointer transition active:scale-95"><i class="fa-solid fa-wallet text-xs" id="asset-pill-icon"></i><span class="text-xs font-bold" id="asset-pill-name">选择账户</span></div>
-                        <input type="text" id="trans-note" placeholder="写点备注..." class="text-right text-xs bg-transparent outline-none w-32">
-                    </div>
-                    <div class="flex items-baseline gap-1 text-slate-800"><span class="text-2xl font-bold">¥</span><div class="text-5xl font-bold tracking-tighter" id="display-amount">0</div></div>
-                </div>
-                <div class="flex-1 overflow-y-auto px-2 pb-2 relative bg-gray-50/50">
-                    <div class="text-xs text-gray-400 font-bold px-4 py-2 sticky top-0 bg-gray-50/95 z-10 flex justify-between backdrop-blur-sm shadow-sm border-b border-gray-100"><span id="grid-title">选择分类</span></div>
-                    <div class="grid grid-cols-5 gap-y-4 gap-x-1 pt-4 pb-4" id="category-grid"></div>
-                </div>
-                <div class="bg-gray-50 pb-6 border-t border-gray-100">
-                    <div class="grid grid-cols-4 gap-[1px] bg-gray-200 shadow-inner">
-                        <button class="key-btn" onclick="appendNumber('7')">7</button><button class="key-btn" onclick="appendNumber('8')">8</button><button class="key-btn" onclick="appendNumber('9')">9</button><button class="key-btn text-sm" onclick="updateDateDisplay()">今天</button>
-                        <button class="key-btn" onclick="appendNumber('4')">4</button><button class="key-btn" onclick="appendNumber('5')">5</button><button class="key-btn" onclick="appendNumber('6')">6</button><button class="key-btn text-teal-500" onclick="appendNumber('+')">+</button>
-                        <button class="key-btn" onclick="appendNumber('1')">1</button><button class="key-btn" onclick="appendNumber('2')">2</button><button class="key-btn" onclick="appendNumber('3')">3</button><button class="key-btn text-teal-500" onclick="appendNumber('-')">-</button>
-                        <button class="key-btn" onclick="appendNumber('.')">.</button><button class="key-btn" onclick="appendNumber('0')">0</button><button class="key-btn text-slate-400" onclick="deleteNumber()">del</button><button id="keypad-done-btn" class="bg-teal-600 text-white font-bold text-lg active:bg-teal-700" onclick="submitTransaction()">完成</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- 弹窗组件保持不变 -->
+        <div id="add-modal" class="absolute inset-0 z-50 hidden flex flex-col justify-end"><div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 transition-opacity" id="add-backdrop" onclick="closeAddModal()"></div><div class="relative bg-white rounded-t-3xl shadow-2xl h-[85%] flex flex-col translate-y-full transition-transform" id="add-panel"><div class="w-full flex justify-center pt-3 pb-1" onclick="closeAddModal()"><div class="w-10 h-1 bg-gray-200 rounded-full"></div></div><div class="px-6 py-2 flex justify-center"><div class="bg-gray-100 p-1 rounded-xl flex w-full max-w-[200px]"><button onclick="setAddType('expense')" id="btn-expense" class="flex-1 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm transition-all text-slate-800">支出</button><button onclick="setAddType('income')" id="btn-income" class="flex-1 py-1.5 rounded-lg text-sm font-bold text-gray-400 transition-all">收入</button></div></div><div class="px-6 py-4 flex flex-col items-end border-b border-gray-50"><div class="flex items-center justify-between w-full mb-2"><div onclick="toggleGridMode()" id="asset-pill" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full cursor-pointer transition active:scale-95"><i class="fa-solid fa-wallet text-xs" id="asset-pill-icon"></i><span class="text-xs font-bold" id="asset-pill-name">选择账户</span></div><input type="text" id="trans-note" placeholder="写点备注..." class="text-right text-xs bg-transparent outline-none w-32"></div><div class="flex items-baseline gap-1 text-slate-800"><span class="text-2xl font-bold">¥</span><div class="text-5xl font-bold tracking-tighter" id="display-amount">0</div></div></div><div class="flex-1 overflow-y-auto px-2 pb-2 relative bg-gray-50/50"><div class="text-xs text-gray-400 font-bold px-4 py-2 sticky top-0 bg-gray-50/95 z-10 flex justify-between backdrop-blur-sm shadow-sm border-b border-gray-100"><span id="grid-title">选择分类</span></div><div class="grid grid-cols-5 gap-y-4 gap-x-1 pt-4 pb-4" id="category-grid"></div></div><div class="bg-gray-50 pb-6 border-t border-gray-100"><div class="grid grid-cols-4 gap-[1px] bg-gray-200 shadow-inner"><button class="key-btn" onclick="appendNumber('7')">7</button><button class="key-btn" onclick="appendNumber('8')">8</button><button class="key-btn" onclick="appendNumber('9')">9</button><button class="key-btn text-sm" onclick="updateDateDisplay()">今天</button><button class="key-btn" onclick="appendNumber('4')">4</button><button class="key-btn" onclick="appendNumber('5')">5</button><button class="key-btn" onclick="appendNumber('6')">6</button><button class="key-btn text-teal-500" onclick="appendNumber('+')">+</button><button class="key-btn" onclick="appendNumber('1')">1</button><button class="key-btn" onclick="appendNumber('2')">2</button><button class="key-btn" onclick="appendNumber('3')">3</button><button class="key-btn text-teal-500" onclick="appendNumber('-')">-</button><button class="key-btn" onclick="appendNumber('.')">.</button><button class="key-btn" onclick="appendNumber('0')">0</button><button class="key-btn text-slate-400" onclick="deleteNumber()">del</button><button id="keypad-done-btn" class="bg-teal-600 text-white font-bold text-lg active:bg-teal-700" onclick="submitTransaction()">完成</button></div></div></div></div>
         
-        <!-- 账单操作菜单 -->
-        <div id="tx-action-modal" class="absolute inset-0 z-[60] hidden flex flex-col justify-end">
-            <div class="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onclick="closeTxAction()"></div>
-            <div class="relative bg-white rounded-t-3xl p-6 shadow-2xl transition-transform translate-y-full duration-300" id="tx-action-panel">
-                <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-slate-800">账单详情</h3><button onclick="closeTxAction()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fa-solid fa-times"></i></button></div>
-                <div class="bg-gray-50 rounded-2xl p-4 mb-6 flex items-center gap-4"><div id="tx-detail-icon" class="w-12 h-12 rounded-full flex items-center justify-center text-xl bg-white shadow-sm text-teal-600"><i class="fa-solid fa-star"></i></div><div class="flex-1"><div class="flex justify-between items-center mb-1"><span class="font-bold text-slate-800 text-lg" id="tx-detail-cat">分类</span><span class="font-bold text-xl font-mono" id="tx-detail-amount">0.00</span></div><div class="flex justify-between items-center text-xs text-gray-400"><span id="tx-detail-date">日期</span><span id="tx-detail-asset" class="bg-white px-2 py-1 rounded border border-gray-100">账户</span></div><div class="mt-2 text-sm text-gray-600 bg-white/50 p-2 rounded-lg" id="tx-detail-note">无备注</div></div></div>
-                <div class="flex gap-3"><button onclick="editCurrentTx()" class="flex-1 py-3.5 bg-teal-50 text-teal-600 rounded-xl font-bold text-sm hover:bg-teal-100 transition">编辑</button><button onclick="deleteCurrentTx()" class="flex-1 py-3.5 bg-red-50 text-red-500 rounded-xl font-bold text-sm hover:bg-red-100 transition">删除</button></div>
-            </div>
-        </div>
-
-        <!-- 资产表单弹窗 -->
-        <div id="asset-form-modal" class="absolute inset-0 z-[60] hidden flex flex-col justify-end">
-            <div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closeAssetForm()"></div>
-            <div class="relative bg-white rounded-t-3xl h-auto flex flex-col transition-transform translate-y-full duration-300" id="asset-form-panel">
-                <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100"><button onclick="closeAssetForm()" class="text-gray-500 text-sm">取消</button><h3 class="font-bold text-slate-800" id="asset-form-title">添加账户</h3><button onclick="saveAssetForm()" class="text-teal-600 font-bold text-sm">保存</button></div>
-                <div class="p-6 space-y-5 pb-10">
-                    <div><label class="text-xs text-gray-400 font-bold mb-3 block">选择图标</label><div class="grid grid-cols-5 gap-4" id="af-icon-grid"></div></div>
-                    <div class="space-y-3">
-                        <div><label class="text-xs text-gray-400 font-bold ml-1">账户名称</label><input id="af-name" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="如: 私房钱"></div>
-                        <div class="flex gap-4">
-                            <div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">当前余额</label><input id="af-balance" type="number" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="0.00"></div>
-                            <div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">类型</label><div class="flex bg-gray-100 p-1 rounded-xl mt-1 h-[46px]"><button onclick="setAssetFormType('asset')" id="af-type-asset" class="flex-1 rounded-lg text-xs font-bold transition">资产</button><button onclick="setAssetFormType('liability')" id="af-type-liability" class="flex-1 rounded-lg text-xs font-bold transition">负债</button></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <div id="tx-action-modal" class="absolute inset-0 z-[60] hidden flex flex-col justify-end"><div class="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onclick="closeTxAction()"></div><div class="relative bg-white rounded-t-3xl p-6 shadow-2xl transition-transform translate-y-full duration-300" id="tx-action-panel"><div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-slate-800">账单详情</h3><button onclick="closeTxAction()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fa-solid fa-times"></i></button></div><div class="bg-gray-50 rounded-2xl p-4 mb-6 flex items-center gap-4"><div id="tx-detail-icon" class="w-12 h-12 rounded-full flex items-center justify-center text-xl bg-white shadow-sm text-teal-600"><i class="fa-solid fa-star"></i></div><div class="flex-1"><div class="flex justify-between items-center mb-1"><span class="font-bold text-slate-800 text-lg" id="tx-detail-cat">分类</span><span class="font-bold text-xl font-mono" id="tx-detail-amount">0.00</span></div><div class="flex justify-between items-center text-xs text-gray-400"><span id="tx-detail-date">日期</span><span id="tx-detail-asset" class="bg-white px-2 py-1 rounded border border-gray-100">账户</span></div><div class="mt-2 text-sm text-gray-600 bg-white/50 p-2 rounded-lg" id="tx-detail-note">无备注</div></div></div><div class="flex gap-3"><button onclick="editCurrentTx()" class="flex-1 py-3.5 bg-teal-50 text-teal-600 rounded-xl font-bold text-sm hover:bg-teal-100 transition">编辑</button><button onclick="deleteCurrentTx()" class="flex-1 py-3.5 bg-red-50 text-red-500 rounded-xl font-bold text-sm hover:bg-red-100 transition">删除</button></div></div></div>
+        
+        <div id="asset-form-modal" class="absolute inset-0 z-[60] hidden flex flex-col justify-end"><div class="absolute inset-0 bg-black/20 backdrop-blur-sm" onclick="closeAssetForm()"></div><div class="relative bg-white rounded-t-3xl h-auto flex flex-col transition-transform translate-y-full duration-300" id="asset-form-panel"><div class="px-6 py-4 flex justify-between items-center border-b border-gray-100"><button onclick="closeAssetForm()" class="text-gray-500 text-sm">取消</button><h3 class="font-bold text-slate-800" id="asset-form-title">添加账户</h3><button onclick="saveAssetForm()" class="text-teal-600 font-bold text-sm">保存</button></div><div class="p-6 space-y-5 pb-10"><div><label class="text-xs text-gray-400 font-bold mb-3 block">选择图标</label><div class="grid grid-cols-5 gap-4" id="af-icon-grid"></div></div><div class="space-y-3"><div><label class="text-xs text-gray-400 font-bold ml-1">账户名称</label><input id="af-name" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="如: 私房钱"></div><div class="flex gap-4"><div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">当前余额</label><input id="af-balance" type="number" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-teal-100 mt-1" placeholder="0.00"></div><div class="flex-1"><label class="text-xs text-gray-400 font-bold ml-1">类型</label><div class="flex bg-gray-100 p-1 rounded-xl mt-1 h-[46px]"><button onclick="setAssetFormType('asset')" id="af-type-asset" class="flex-1 rounded-lg text-xs font-bold transition">资产</button><button onclick="setAssetFormType('liability')" id="af-type-liability" class="flex-1 rounded-lg text-xs font-bold transition">负债</button></div></div></div></div></div></div></div>
     </div>
 
     <script>
@@ -297,23 +250,23 @@
             }
         };
 
-        // --- AUTH V6 (SEPARATED LOGIN/SIGNUP) ---
+        // --- AUTH V8 (ENHANCED ERROR HANDLING) ---
         function switchAuthMode(mode) {
             state.authMode = mode;
             const btnLogin = document.getElementById('tab-login');
             const btnSignup = document.getElementById('tab-signup');
             const btnSubmit = document.getElementById('auth-submit-btn');
-            const errorMsg = document.getElementById('auth-error-msg');
+            const errorBox = document.getElementById('auth-error-box');
             
-            errorMsg.innerText = ''; // Clear errors
+            errorBox.classList.add('hidden'); // Clear errors
             
             if (mode === 'login') {
-                btnLogin.classList.add('active'); btnLogin.classList.remove('inactive');
-                btnSignup.classList.remove('active'); btnSignup.classList.add('inactive');
+                btnLogin.classList.add('active');
+                btnSignup.classList.remove('active');
                 btnSubmit.innerHTML = '<span>立即登录</span>';
             } else {
-                btnSignup.classList.add('active'); btnSignup.classList.remove('inactive');
-                btnLogin.classList.remove('active'); btnLogin.classList.add('inactive');
+                btnSignup.classList.add('active');
+                btnLogin.classList.remove('active');
                 btnSubmit.innerHTML = '<span>注册新账号</span>';
             }
         }
@@ -322,51 +275,55 @@
             if (!supabaseClient) return showToast('系统错误：未连接数据库');
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            const errorMsg = document.getElementById('auth-error-msg');
+            const errorBox = document.getElementById('auth-error-box');
             
-            if(!email || !pass) { errorMsg.innerText = '请输入邮箱和密码'; return; }
-            if(pass.length < 6) { errorMsg.innerText = '密码至少需要6位'; return; }
+            errorBox.classList.add('hidden');
+            if(!email || !pass) { errorBox.innerText = '请输入邮箱和密码'; errorBox.classList.remove('hidden'); return; }
+            if(pass.length < 6) { errorBox.innerText = '密码至少需要6位'; errorBox.classList.remove('hidden'); return; }
             
             const btn = document.getElementById('auth-submit-btn');
             const oldText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 处理中...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
             btn.disabled = true;
-            errorMsg.innerText = '';
 
             try {
                 if (state.authMode === 'login') {
-                    // LOGIN MODE
+                    // LOGIN
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
                     if (error) throw error;
                     user = data.user;
                     showApp();
                     await fetchData();
                 } else {
-                    // SIGNUP MODE
+                    // SIGNUP
                     const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
                     if (error) throw error;
-                    // Auto login often happens after signup if email confirm is off
                     if (data.session) {
                         user = data.user;
                         showApp();
                         await fetchData();
                         showToast('注册成功！');
                     } else {
-                        alert('注册成功！请直接登录。');
+                        alert('注册成功！如果开启了邮箱验证，请查收邮件。');
                         switchAuthMode('login');
                     }
                 }
             } catch (err) {
                 console.error(err);
-                if (err.message.includes('rate limit')) {
-                    errorMsg.innerText = '⚠️ 操作太频繁，请稍后重试 (建议15分钟后)';
-                } else if (err.message.includes('Invalid login')) {
-                    errorMsg.innerText = '账号或密码错误';
-                } else if (err.message.includes('User already registered')) {
-                    errorMsg.innerText = '该邮箱已注册，请直接登录';
+                errorBox.classList.remove('hidden');
+                const msg = err.message.toLowerCase();
+                
+                if (msg.includes('rate limit')) {
+                    errorBox.innerText = '⚠️ 操作太频繁，请稍后重试 (或使用游客模式)';
+                } else if (msg.includes('invalid login')) {
+                    errorBox.innerText = '账号或密码错误';
+                } else if (msg.includes('user already registered')) {
+                    errorBox.innerText = '该邮箱已注册，请直接登录';
                     switchAuthMode('login');
+                } else if (msg.includes('signups are disabled')) {
+                    errorBox.innerText = '⚠️ 错误：云端未开启注册功能。请去 Supabase 后台开启 Email Provider';
                 } else {
-                    errorMsg.innerText = err.message;
+                    errorBox.innerText = '错误: ' + err.message;
                 }
             } finally {
                 btn.innerHTML = oldText;
@@ -436,7 +393,6 @@
             document.querySelectorAll('.view-page').forEach(e=>e.classList.add('hidden')); 
             const target = document.getElementById('view-'+v);
             target.classList.remove('hidden');
-            setTimeout(()=>target.classList.remove('translate-x-full'), 10);
             renderNav(); 
             if(v === 'bill') renderBill();
             else if(v === 'assets') renderAssets();
@@ -468,7 +424,6 @@
             assetAccounts.forEach(a => {
                 if(a.type === 'asset') totA += a.balance; else totL += a.balance;
                 const preset = iconPresets.find(p => p.icon === a.icon) || iconPresets[3];
-                // Use strict == for ID match
                 list.innerHTML += `<div class="flex items-center p-4 bg-white rounded-2xl shadow-soft border border-slate-50 mb-3 cursor-pointer active:scale-[0.98] transition" onclick="openAssetForm('${a.id}')"><div class="w-12 h-12 rounded-full ${preset.bg} flex items-center justify-center ${preset.color} text-xl mr-4"><i class="${a.icon||'fa-solid fa-wallet'}"></i></div><div class="flex-1"><div class="font-bold text-slate-700 text-sm">${a.name}</div><div class="text-xs text-gray-400 mt-0.5">${a.type==='asset'?'资产':'负债'}</div></div><div class="text-right"><div class="font-bold text-slate-800">¥${a.balance.toFixed(2)}</div><div class="text-[10px] text-gray-300"><i class="fa-solid fa-pen"></i></div></div></div>`;
             });
             net = totA - totL; document.getElementById('asset-net-total').innerText = net.toFixed(2); document.getElementById('asset-total-assets').innerText = totA.toFixed(2); document.getElementById('asset-total-liabilities').innerText = totL.toFixed(2);
